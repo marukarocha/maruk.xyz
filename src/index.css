@@ -127,4 +127,6 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
+
+  /* Custom cursors are now handled by the SectionCursor React component */
 }

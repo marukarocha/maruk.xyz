@@ -13,12 +13,26 @@ export interface ProjectData {
   challenges: string[];
   features: string[];
   techStack: string[];
+  deepDive?: {
+    headline?: string;
+    blocks: Array<{
+      title: string;
+      summary?: string;
+      points: string[];
+    }>;
+  };
   
   // Visuals
   images: {
     hero: string;
     gallery: string[];
+    heroVideo?: string;
+    logo?: string;
   };
+  videos?: Array<{
+    title: string;
+    url: string;
+  }>;
   
   // Links
   links: {

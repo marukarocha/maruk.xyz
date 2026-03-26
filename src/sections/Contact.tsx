@@ -9,37 +9,26 @@ export const Contact = () => {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const { t } = useLanguage();
   
-  const contactInfo = [
-    {
-      icon: Mail,
-      value: 'maruk.xyz@gmail.com', // Updated per request
-      link: 'mailto:maruk.xyz@gmail.com'
-    }
-  ];
-
   const socialLinks = [
     {
       icon: Github,
       name: 'GitHub',
       url: 'https://github.com/marukarocha/',
-      color: 'hover:text-gray-900 dark:hover:text-white'
     },
     {
       icon: Box,
       name: 'Sketchfab',
       url: 'https://sketchfab.com/maruk.xyz',
-      color: 'hover:text-blue-500'
     },
     {
       icon: Instagram,
       name: 'Instagram',
       url: 'https://www.instagram.com/maruk.xyz/',
-      color: 'hover:text-pink-500'
     }
   ];
 
   return (
-    <section id="contact" className="min-h-screen flex items-center section-padding bg-gray-900 relative overflow-hidden">
+    <section id="contact" className="min-h-screen flex items-center section-padding bg-[#0a0a0a] relative overflow-hidden">
       
       {/* Background Video */}
       <div className="absolute inset-0 z-0 w-full h-full pointer-events-none overflow-hidden">
@@ -76,6 +65,22 @@ export const Contact = () => {
               <span className="border-b border-white/20 pb-1 group-hover:border-white transition-all duration-300">maruk.xyz@gmail.com</span>
               <Mail className="w-5 h-5 md:w-6 md:h-6 opacity-50 group-hover:opacity-100 transition-opacity duration-300" />
             </a>
+
+            {/* Social Links */}
+            <div className="flex items-center gap-6 mt-4">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.name}
+                  className="p-3 rounded-full border border-white/10 text-white/40 hover:text-white/90 hover:border-white/30 transition-all duration-300"
+                >
+                  <social.icon size={18} />
+                </a>
+              ))}
+            </div>
             
           </motion.div>
 

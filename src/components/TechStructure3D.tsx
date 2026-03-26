@@ -1,5 +1,5 @@
-import { useRef, useEffect, Suspense, useLayoutEffect, useState, forwardRef, useImperativeHandle } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { useRef, useEffect, Suspense, useLayoutEffect, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF, Environment, ContactShadows, Html, useProgress } from '@react-three/drei';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -11,6 +11,59 @@ gsap.registerPlugin(ScrollTrigger);
 const DEFAULT_SCALE = 12; // Aumentado para preencher mais e impor presença
 const MODEL_URL = "/3d/tvs.glb"; 
 const DEFAULT_ROTATION: [number, number, number] = [0, 0, 0];
+
+// Hologram Shader (converted from TSL to GLSL)
+const HOLOGRAM_VERTEX = `
+  varying vec3 vNormalView;
+  varying vec3 vPositionLocal;
+
+  void main() {
+    vPositionLocal = position;
+    vNormalView = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const HOLOGRAM_FRAGMENT = `
+  uniform float uTime;
+  uniform vec3 uBaseColor;
+  uniform float uFlickerAmount;
+  uniform float uIntensity;
+  uniform float uOpacity;
+
+  varying vec3 vNormalView;
+  varying vec3 vPositionLocal;
+
+  float scanlines(float posy, float t) {
+    float val = fract(posy * 30.0 - t * 0.5);
+    return smoothstep(0.5, 0.95, val);
+  }
+
+  float fresnel(vec3 viewNormal) {
+    float x2 = viewNormal.x * viewNormal.x;
+    float y2 = viewNormal.y * viewNormal.y;
+    return pow(sqrt(x2 + y2), 5.0);
+  }
+
+  float flicker(float t, float amount) {
+    float f1 = fract(t * 28.7);
+    float f2 = fract(t * 35.3);
+    float s = smoothstep(0.6, 0.8, f1 * f2);
+    return 1.0 - s * 0.3 * amount;
+  }
+
+  void main() {
+    float scan = scanlines(vPositionLocal.y, uTime);
+    float fres = fresnel(vNormalView);
+    float flick = flicker(uTime, uFlickerAmount);
+
+    float compose = (0.05 + fres * 1.0 + scan * fres * uIntensity) * flick;
+    compose = clamp(compose, 0.0, 1.0);
+
+    vec3 finalColor = uBaseColor * compose;
+    gl_FragColor = vec4(finalColor, compose * uOpacity);
+  }
+`;
 
 interface ModelProps {
   url: string;
@@ -35,17 +88,18 @@ function Loader() {
 }
 
 // Wrap TechModel with forwardRef to expose rotation control
-const TechModel = forwardRef(({ url, scale = DEFAULT_SCALE, rotation = DEFAULT_ROTATION }: ModelProps, ref) => {
+const TechModel = forwardRef(({ url }: ModelProps, ref) => {
   const { scene } = useGLTF(url);
   const groupRef = useRef<THREE.Group>(null);
   
-  // Refs para as duas versões (Textura vs Wireframe)
-  const wireframeRef = useRef<THREE.Group>(null);
-  const texturedRef = useRef<THREE.Group>(null);
+  // Ref para a versão holográfica
+  const hologramRef = useRef<THREE.Group>(null);
   
-  // Create two distinct versions of the scene
-  const [wireframeScene, setWireframeScene] = useState<THREE.Group | null>(null);
-  const [texturedScene, setTexturedScene] = useState<THREE.Group | null>(null);
+  const [hologramScene, setHologramScene] = useState<THREE.Group | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Ref to store hologram material uniforms for time update
+  const hologramMaterialsRef = useRef<THREE.ShaderMaterial[]>([]);
 
   // Expose groupRef to parent
   useImperativeHandle(ref, () => groupRef.current);
@@ -53,126 +107,155 @@ const TechModel = forwardRef(({ url, scale = DEFAULT_SCALE, rotation = DEFAULT_R
   useEffect(() => {
     if (!scene) return;
 
-    // Correção de Texturas (V Axis Flip)
-    scene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-         const mesh = child as THREE.Mesh;
-         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-         
-         materials.forEach((mat) => {
-            if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshBasicMaterial) {
-               if (mat.map) {
-                 mat.map.flipY = true; 
-                 mat.map.needsUpdate = true;                            
-               }
-            }
-         });
-      }
-    });
-
-    // 1. Setup Wireframe Version (Destino da transição - "Luminoso")
-    const wf = scene.clone(true);
-    wf.traverse((child) => {
+    // Setup Hologram Version - única versão visível
+    const hologramMats: THREE.ShaderMaterial[] = [];
+    const holo = scene.clone(true);
+    holo.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
-        mesh.material = new THREE.MeshStandardMaterial({
-          wireframe: true,
-          color: new THREE.Color("#00ffff"),
-          emissive: new THREE.Color("#00aa88"),
-          emissiveIntensity: 3, 
+        const holoMat = new THREE.ShaderMaterial({
+          vertexShader: HOLOGRAM_VERTEX,
+          fragmentShader: HOLOGRAM_FRAGMENT,
+          uniforms: {
+            uTime: { value: 0 },
+            uBaseColor: { value: new THREE.Color(0.0, 1.0, 0.8) }, // Cyan/teal hologram
+            uFlickerAmount: { value: 0.5 },
+            uIntensity: { value: 1.31 },
+            uOpacity: { value: 1 }, // Visível desde o início
+          },
           transparent: true,
-          opacity: 0, // Começa invisível
           blending: THREE.AdditiveBlending,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
+          depthWrite: false,
         });
+        mesh.material = holoMat;
+        hologramMats.push(holoMat);
       }
     });
-    setWireframeScene(wf);
-
-    // 2. Setup Textured Version (Origem - "Real")
-    const tx = scene.clone(true);
-    tx.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        const originalMat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-        if (originalMat) {
-           const newMat = originalMat.clone();
-           newMat.transparent = true;
-           newMat.opacity = 1; // Começa visível
-           newMat.side = THREE.DoubleSide;
-           mesh.material = newMat;
-        }
-      }
-    });
-    setTexturedScene(tx);
+    hologramMaterialsRef.current = hologramMats;
+    setHologramScene(holo);
 
   }, [scene]);
 
+  // Update hologram shader time uniform every frame
+  useFrame((_, delta) => {
+    hologramMaterialsRef.current.forEach((mat) => {
+      mat.uniforms.uTime.value += delta;
+    });
+  });
+
   useLayoutEffect(() => {
-    if (!groupRef.current || !texturedRef.current || !wireframeRef.current) return;
+    if (!groupRef.current || !hologramRef.current) return;
 
     const ctx = gsap.context(() => {
-      
-      // Auto-rotation Linked to Scroll (Restored Feature)
-      // This rotates the model 360 degrees as the user scrolls through the About section
-      gsap.to(groupRef.current!.rotation, {
-          y: Math.PI * 2, // 360 degrees
-          ease: "none",
-          scrollTrigger: {
-              trigger: "#about",
-              start: "top bottom",
-              end: "bottom top", 
-              scrub: 1
-          }
-      });
 
-      // 2. Transição de Transformação (Textura -> Wireframe) - Mantida ligada ao scroll
+      const group = groupRef.current!;
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: "#about",
-          start: "center 40%", 
-          end: "bottom top",
-          scrub: true
+      // ===== AUTOMATIC ENTRANCE (anticipated for flow continuity) =====
+      gsap.set(group.scale, { x: 0, y: 0, z: 0 });
+      gsap.set(group.position, { y: 6 });
+      gsap.set(group.rotation, { x: 0, y: 0, z: 0 });
+
+      // Auto entrance: smooth scale up + gentle drop + spin
+      ScrollTrigger.create({
+        trigger: "#about",
+        start: "top bottom-=100",
+        once: true,
+        onEnter: () => {
+          gsap.to(group.scale, { 
+            x: DEFAULT_SCALE, y: DEFAULT_SCALE, z: DEFAULT_SCALE, 
+            duration: 2.5, ease: "power3.out" 
+          });
+          gsap.to(group.position, { 
+            y: -2, duration: 2.2, ease: "power2.out" 
+          });
+          gsap.to(group.rotation, { 
+            y: Math.PI * 2, // 360 degrees — smooth, not frantic
+            duration: 3, ease: "power2.out" 
+          });
         }
       });
 
-      if (wireframeScene) {
-          wireframeRef.current?.traverse((child) => {
-             if ((child as THREE.Mesh).isMesh) {
-                const mat = (child as THREE.Mesh).material as THREE.Material;
-                tl.to(mat, { opacity: 0.4, duration: 1 }, 0);
-             }
-          });
-      }
-      
-      if (texturedScene) {
-         texturedRef.current?.traverse((child) => {
-            if ((child as THREE.Mesh).isMesh) {
-               const mat = (child as THREE.Mesh).material as THREE.Material;
-               tl.to(mat, { opacity: 0, duration: 1 }, 0);
-            }
-         });
-      }
+      // ===== SCROLL-LINKED ROTATION (additive, continuous through pin) =====
+      // Uses += so it adds on top of the entrance rotation instead of conflicting
+      gsap.to(group.rotation, {
+        y: `+=${Math.PI * 3}`, // 1.5 turns over the entire pin — slow and fluid
+        ease: "none",
+        scrollTrigger: {
+          trigger: "#about",
+          start: "top top",
+          end: "+=2400",
+          scrub: 3, // higher scrub = smoother/laggier rotation
+        }
+      });
+
+      // ===== SCROLL-LINKED EXIT (synced with About pin end) =====
+      // Timeline matches About.tsx: 18 units over +=2400px
+      const masterTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: "#about",
+          start: "top top",
+          end: "+=2400",
+          scrub: 0.8,
+        }
+      });
+
+      // --- Exit synced with last slide fadeout at position 15 — slow and gentle ---
+      masterTl
+        .to(group.scale, { x: 0, y: 0, z: 0, duration: 2, ease: "power1.inOut" }, 15)
+        .to(group.position, { y: 4, duration: 2, ease: "power1.inOut" }, 15);
 
     });
 
     return () => ctx.revert();
-  }, [texturedScene, wireframeScene]);
+  }, [hologramScene]);
+
+  // Click interaction: random spin between 30° and 360°, smooth mechanical arm feel
+  const handleClick = useCallback(() => {
+    if (!groupRef.current) return;
+    const randomDeg = 30 + Math.random() * 330; // 30 to 360 degrees
+    const randomRad = (randomDeg * Math.PI) / 180;
+    const direction = Math.random() > 0.5 ? 1 : -1;
+    gsap.to(groupRef.current.rotation, {
+      y: `+=${randomRad * direction}`,
+      duration: 2.5,
+      ease: "power4.out",
+      overwrite: "auto",
+    });
+  }, []);
 
   return (
     <group 
       ref={groupRef} 
-      position={[0, -2, 0]} 
-      scale={scale} 
-      rotation={[0, Math.PI, 0]} 
+      position={[0, 6, 0]} 
+      scale={0} 
+      rotation={[0, 0, 0]} 
+      onClick={handleClick}
+      onPointerOver={() => setIsHovered(true)}
+      onPointerOut={() => setIsHovered(false)}
     >
-      <group ref={wireframeRef}>
-        {wireframeScene && <primitive object={wireframeScene} />}
+      <group ref={hologramRef}>
+        {hologramScene && <primitive object={hologramScene} />}
       </group>
-      <group ref={texturedRef}>
-        {texturedScene && <primitive object={texturedScene} />}
-      </group>
+      {/* HUD "Click" label on hover */}
+      {isHovered && (
+        <Html center distanceFactor={4} style={{ pointerEvents: 'none' }}>
+          <div className="flex flex-col items-center gap-1 select-none">
+            <span 
+              className="text-[10px] font-mono uppercase tracking-[0.3em] px-3 py-1 rounded-full border animate-pulse"
+              style={{
+                color: '#ffaa00',
+                borderColor: 'rgba(255, 170, 0, 0.4)',
+                background: 'rgba(255, 170, 0, 0.08)',
+                backdropFilter: 'blur(4px)',
+                textShadow: '0 0 8px rgba(255, 170, 0, 0.5)',
+              }}
+            >
+              Click
+            </span>
+          </div>
+        </Html>
+      )}
     </group>
   );
 });

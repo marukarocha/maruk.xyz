@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Box, X, Layout, Cpu } from 'lucide-react';
 import { gsap } from 'gsap';
 import { useProjectModal } from '../hooks/useProjectModal';
+import { getProjectById } from '../data/projects';
 
 // Tipos
 interface Project {
@@ -10,6 +11,7 @@ interface Project {
   title: string;
   description: string;
   image: string;
+  media?: string[];
   tech: string[];
   github?: string;
   demo?: string;
@@ -36,19 +38,23 @@ const features = [
   {
     id: 'creative-ai',
     icon: Cpu,
-    title: 'Direção Criativa & IA',
+    title: 'Spatial 3D Systems',
   }
 ];
+
+const motodiarioProject = getProjectById('motodiario');
+const pdvShowcaseProject = getProjectById('pdv-showcase');
 
 // Dados dos projetos por categoria (Case Studies)
 const projectsByCategory: Record<string, Project[]> = {
   'web-apps': [
     {
       id: 'motodiario',
-      title: 'Moto Diário',
-      description: 'Plataforma PWA para motociclistas com rotas offline e gestão de manutenção.',
-      image: '/images/motodiario-hero.jpg', // Placeholder - será substituído se a imagem não existir
-      tech: ['React', 'Mapbox', 'PWA', 'Supabase'],
+      title: motodiarioProject?.title || 'Moto Diário',
+      description: motodiarioProject?.shortDescription || 'Plataforma PWA para motociclistas com rotas offline e gestão de manutenção.',
+      image: motodiarioProject?.images.hero || '/images/motodiario-hero.jpg',
+      media: motodiarioProject?.images.gallery || [],
+      tech: motodiarioProject?.techStack?.slice(0, 4) || ['React', 'Mapbox', 'PWA', 'Supabase'],
       projectId: 'motodiario'
     },
     {
@@ -92,20 +98,20 @@ const projectsByCategory: Record<string, Project[]> = {
   ],
   'creative-ai': [
     {
-      id: 301,
-      title: 'AI Branding System',
-      description: 'Identidade visual gerada com auxílio de IA e refinada manualmente, criando uma linguagem visual única e escalável.',
-      image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80',
-      tech: ['Midjourney', 'Stable Diffusion', 'Figma', 'React'],
-      github: '#',
-      demo: '#'
+      id: 'pdv-showcase',
+      title: pdvShowcaseProject?.title || 'PDV Spatial Showcase',
+      description: pdvShowcaseProject?.shortDescription || 'Cena 3D com hotspots, camera tour e narrativa visual para apresentar produto com atmosfera e contexto.',
+      image: pdvShowcaseProject?.images.hero || '/port/pdv-showcase/hero-poster.svg',
+      media: pdvShowcaseProject?.images.gallery || [],
+      tech: pdvShowcaseProject?.techStack?.slice(0, 4) || ['Three.js', 'GSAP', 'Spatial UI', 'GLTF'],
+      projectId: 'pdv-showcase'
     },
     {
       id: 302,
-      title: 'Generative UI Components',
-      description: 'Biblioteca de componentes de interface que se adaptam ao contexto do usuário usando lógica generativa.',
-      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80',
-      tech: ['OpenAI API', 'React', 'Tailwind', 'Storybook'],
+      title: 'Interactive 3D Product System',
+      description: 'Sistema visual para demonstrar produto, interface e storytelling em uma mesma experiencia com scroll, camera e camadas editoriais.',
+      image: '/port/pdv-showcase/camera-poster.svg',
+      tech: ['Three.js', 'ScrollTrigger', 'TypeScript', 'Motion'],
       github: '#',
       demo: '#'
     }
@@ -266,10 +272,10 @@ export const ProjectsShowcase = ({ category, onClose }: ProjectsShowcaseProps) =
         </div>
         
         {/* Vimeo Reels - Keep as is but maybe wrap in consistent container */}
-        {(category === 'frontend' || category === 'animation') && (
+        {(category === 'web-apps' || category === '3d-motion') && (
           <div className="mb-8 w-full bg-[#000] border border-[#222] aspect-video">
             <iframe
-              src={category === 'frontend' 
+              src={category === 'web-apps'
                 ? "https://player.vimeo.com/video/880236451?badge=0&autopause=0&player_id=0&app_id=58479"
                 : "https://player.vimeo.com/video/816333951?badge=0&autopause=0&player_id=0&app_id=58479&loop=1"
               }
@@ -277,7 +283,7 @@ export const ProjectsShowcase = ({ category, onClose }: ProjectsShowcaseProps) =
               allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
               style={{ width: '100%', height: '100%' }}
-              title={category === 'frontend' ? "Trabalhos Web" : "Reel"}
+              title={category === 'web-apps' ? "Trabalhos Web" : "Reel"}
             />
           </div>
         )}
@@ -337,6 +343,16 @@ export const ProjectsShowcase = ({ category, onClose }: ProjectsShowcaseProps) =
                       </span>
                     ))}
                   </div>
+
+                  {project.media && project.media.length > 0 && (
+                    <div className="mb-5 grid grid-cols-4 gap-1.5">
+                      {project.media.slice(0, 4).map((mediaUrl, mediaIndex) => (
+                        <div key={`${mediaUrl}-${mediaIndex}`} className="h-10 overflow-hidden rounded-md border border-white/10 bg-black/35">
+                          <img src={mediaUrl} alt={`${project.title} mídia ${mediaIndex + 1}`} className="h-full w-full object-cover opacity-85" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   
                   {/* Links or CTA */}
                   <div className="flex gap-4">
@@ -369,8 +385,7 @@ export const ProjectsShowcase = ({ category, onClose }: ProjectsShowcaseProps) =
                           </a>
                         )}
                       </>
-                    )}ve Demo
-                    </a>
+                    )}
                   </div>
                 </div>
               </div>

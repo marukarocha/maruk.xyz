@@ -4,13 +4,26 @@ export const pt = {
     description: "Desenvolvimento de aplicações, sites e sistemas sob medida. Mais de 20 anos trabalhando com tecnologia, design e criação digital."
   },
   hero: {
-    smallLine: "",
+    smallLine: "Developer & Designer · +20 anos de experiência",
     title: "Sistemas. Interfaces. Movimento.",
-    subtitle: "", // Removido em favor do techStack e smallLine
+    subtitle: "",
     description: "Design, sistemas e experiências interativas na fronteira da web.",
-    techStack: "React · Three.js · GSAP · IA · Arquitetura · UI · 3D",
+    techStack: "React · Three.js · GSAP · Spatial UI · Arquitetura · UI · 3D",
+    available: "Disponível para projetos",
     cta1: "Explorar projetos",
-    cta2: "Contato"
+    cta2: "Contato",
+    stats: [
+      { value: "20+", label: "Anos" },
+      { value: "50+", label: "Projetos" },
+      { value: "∞",   label: "Café" }
+    ],
+    terminalLines: [
+      "inicializando maruk.xyz...",
+      "react · three.js · gsap · spatial · arquitetura",
+      "20+ anos de projetos reais entregues.",
+      "status: disponível para novos projetos.",
+      ""
+    ]
   },
   about: {
     title: "",
@@ -50,14 +63,12 @@ export const pt = {
     categories: {
       frontend: "FRONT-END",
       frontendDesc: "React, Tailwind, TypeScript e arquitetura moderna.",
-      three3d: "3D & MOTION",
-      three3dDesc: "Three.js, GSAP e WebGL para experiências imersivas.",
-      ai: "INTELIGÊNCIA ARTIFICIAL",
-      aiDesc: "Integração de LLMs e automação no fluxo criativo.",
+      motion: "MOTION",
+      motionDesc: "Animações fluidas e interativas com GSAP e Framer Motion.",
+      ai: "3D EXPERIENCE",
+      aiDesc: "Three.js, narrativa espacial e interfaces imersivas orientadas a produto.",
       design: "UI/UX DESIGN",
-      designDesc: "Interfaces limpas, acessíveis e focadas em conversão.",
-      seo: "PERFORMANCE & SEO",
-      seoDesc: "Otimização técnica para motores de busca e velocidade."
+      designDesc: "Interfaces limpas, acessíveis e focadas em conversão."
     }
   },
   contact: {
@@ -113,17 +124,30 @@ export const pt = {
 
 export const en = {
   meta: {
-    title: "Maruk | Web Apps, AI & Creative Direction",
-    description: "Front-end development that sets standards. I use Artificial Intelligence and creative direction to build robust web applications."
+    title: "Maruk | Web Apps, 3D & Creative Direction",
+    description: "Front-end development that sets standards. I use 3D, motion and creative direction to build robust web applications."
   },
   hero: {
-    title: "Web Apps, AI & Creative Direction",
-    smallLine: "Independent Developer & Designer",
+    title: "Web Apps, 3D & Creative Direction",
+    smallLine: "Independent Developer & Designer · 20+ years",
     subtitle: "",
-    description: "Front-end development that sets standards. I use Artificial Intelligence and creative direction to build robust and visually striking web applications.",
+    description: "Front-end development that sets standards. I use 3D, motion and creative direction to build robust and visually striking web applications.",
     techStack: "React · WordPress · Flutter · UI · 3D · Integrations",
+    available: "Available for projects",
     cta1: "View Web Solutions",
-    cta2: "AI/Tech Consulting"
+    cta2: "3D/Tech Consulting",
+    stats: [
+      { value: "20+", label: "Years" },
+      { value: "50+", label: "Projects" },
+      { value: "∞",   label: "Coffee" }
+    ],
+    terminalLines: [
+      "initializing maruk.xyz...",
+      "react · three.js · gsap · spatial · architecture",
+      "20+ years of real projects shipped.",
+      "status: available for new projects.",
+      ""
+    ]
   },
   about: {
     title: "",
@@ -163,14 +187,12 @@ export const en = {
     categories: {
       frontend: "FRONTEND",
       frontendDesc: "Building scalable and performant interfaces.",
-      three3d: "3D & MOTION",
-      three3dDesc: "Immersive experiences that retain attention.",
-      ai: "AI & PROMPTING",
-      aiDesc: "Integrating artificial intelligence into the creative flow.",
+      motion: "MOTION",
+      motionDesc: "Fluid animations and interactive experiences.",
+      ai: "3D & SPATIAL",
+      aiDesc: "Three.js scenes, spatial storytelling and immersive product experiences.",
       design: "DESIGN",
-      designDesc: "From concept to high fidelity with precision.",
-      seo: "PERFORMANCE",
-      seoDesc: "Search engine optimization and loading speed."
+      designDesc: "From concept to high fidelity with precision."
     }
   },
   contact: {

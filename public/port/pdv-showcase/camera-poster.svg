@@ -1,0 +1,36 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#050505"/>
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <g opacity="0.24">
+    <circle cx="1216" cy="228" r="180" fill="#67E8F9"/>
+    <circle cx="350" cy="708" r="200" fill="#F59E0B"/>
+  </g>
+  <g opacity="0.48">
+    <path d="M260 648C450 594 670 570 876 450C1104 318 1192 188 1344 156" stroke="#E2E8F0" stroke-opacity="0.45" stroke-width="2" stroke-dasharray="10 12"/>
+    <circle cx="260" cy="648" r="12" fill="#F8FAFC"/>
+    <circle cx="876" cy="450" r="12" fill="#67E8F9"/>
+    <circle cx="1344" cy="156" r="12" fill="#F97316"/>
+  </g>
+  <g>
+    <rect x="980" y="260" width="326" height="246" rx="28" fill="#081325" stroke="#67E8F9" stroke-opacity="0.35"/>
+    <rect x="1016" y="296" width="252" height="154" rx="18" fill="#0E223D"/>
+    <rect x="1068" y="346" width="148" height="52" rx="26" fill="#061120" stroke="#E2E8F0" stroke-opacity="0.24"/>
+    <circle cx="1142" cy="372" r="54" stroke="#67E8F9" stroke-width="8"/>
+  </g>
+  <g fill="#F8FAFC" font-family="Arial Black, Arial, Helvetica, sans-serif">
+    <text x="148" y="238" font-size="26" letter-spacing="7">CAMERA CHOREOGRAPHY</text>
+    <text x="142" y="388" font-size="138" letter-spacing="-7">MOVE.</text>
+    <text x="142" y="504" font-size="138" letter-spacing="-7" fill="#E2E8F0">FRAME.</text>
+    <text x="142" y="620" font-size="138" letter-spacing="-7" fill="#67E8F9">GUIDE.</text>
+  </g>
+  <g fill="#CBD5E1" font-family="Arial, Helvetica, sans-serif">
+    <text x="150" y="722" font-size="24" letter-spacing="2">A cinematic route through interaction nodes, interface overlays and depth cues.</text>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="202" y1="70" x2="1360" y2="842" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A1322"/>
+      <stop offset="0.47" stop-color="#06080F"/>
+      <stop offset="1" stop-color="#111C31"/>
+    </linearGradient>
+  </defs>
+</svg>

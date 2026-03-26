@@ -1,0 +1,40 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#060606"/>
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <g opacity="0.35">
+    <rect x="130" y="170" width="1340" height="560" rx="38" fill="#0B1120" stroke="#E2E8F0" stroke-opacity="0.18"/>
+    <path d="M238 450H552" stroke="#F8FAFC" stroke-opacity="0.22" stroke-width="2"/>
+    <path d="M664 450H938" stroke="#F8FAFC" stroke-opacity="0.22" stroke-width="2"/>
+    <path d="M1048 450H1324" stroke="#F8FAFC" stroke-opacity="0.22" stroke-width="2"/>
+  </g>
+  <g>
+    <circle cx="238" cy="450" r="52" fill="#F97316" fill-opacity="0.14" stroke="#FDBA74" stroke-opacity="0.72"/>
+    <circle cx="644" cy="450" r="52" fill="#22D3EE" fill-opacity="0.14" stroke="#67E8F9" stroke-opacity="0.72"/>
+    <circle cx="1028" cy="450" r="52" fill="#34D399" fill-opacity="0.14" stroke="#86EFAC" stroke-opacity="0.72"/>
+    <circle cx="1364" cy="450" r="52" fill="#A78BFA" fill-opacity="0.14" stroke="#C4B5FD" stroke-opacity="0.72"/>
+  </g>
+  <g fill="#F8FAFC" font-family="Arial Black, Arial, Helvetica, sans-serif">
+    <text x="184" y="463" font-size="34">01</text>
+    <text x="590" y="463" font-size="34">02</text>
+    <text x="972" y="463" font-size="34">03</text>
+    <text x="1308" y="463" font-size="34">04</text>
+  </g>
+  <g fill="#E2E8F0" font-family="Arial, Helvetica, sans-serif">
+    <text x="188" y="268" font-size="20" letter-spacing="8">SPATIAL FLOW</text>
+    <text x="184" y="580" font-size="34" font-weight="700">ENTRY</text>
+    <text x="590" y="580" font-size="34" font-weight="700">HUD</text>
+    <text x="968" y="580" font-size="34" font-weight="700">HOTSPOTS</text>
+    <text x="1290" y="580" font-size="34" font-weight="700">TOUR</text>
+    <text x="184" y="620" font-size="18" fill-opacity="0.62">Camera reveal with brand framing</text>
+    <text x="590" y="620" font-size="18" fill-opacity="0.62">Contextual information system</text>
+    <text x="968" y="620" font-size="18" fill-opacity="0.62">Clickable points inside the 3D space</text>
+    <text x="1290" y="620" font-size="18" fill-opacity="0.62">GSAP-driven guided storytelling</text>
+  </g>
+  <defs>
+    <linearGradient id="bg" x1="110" y1="86" x2="1454" y2="838" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#09101B"/>
+      <stop offset="0.55" stop-color="#05070D"/>
+      <stop offset="1" stop-color="#0D1422"/>
+    </linearGradient>
+  </defs>
+</svg>

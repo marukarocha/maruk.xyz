@@ -63,53 +63,79 @@ export const About = () => {
         // Setup slides
         const slideElements = gsap.utils.toArray<HTMLElement>('.about-slide');
         
-        // Hide all slides initially except the first one
-        gsap.set(slideElements, { autoAlpha: 0, y: 30, filter: "blur(10px)", display: "none" }); 
-        gsap.set(slideElements[0], { autoAlpha: 1, y: 0, filter: "blur(0px)", display: "flex" });
+        // Hide ALL slides initially
+        gsap.set(slideElements, { autoAlpha: 0, y: 30, filter: "blur(10px)" }); 
 
-        // Force a layout refresh 
         ScrollTrigger.refresh();
+
+        // ============================================================
+        // MAIN PINNED TIMELINE — all slides are scrub-controlled
+        // so scrolling back reverses everything properly.
+        //
+        // Timeline: 18 units over +=2400px scroll
+        //  0–1   : Slide 1 fades IN  (entrance)
+        //  1–5   : Slide 1 visible (reading time)
+        //  5–6   : Slide 1 OUT / Slide 2 IN
+        //  6–10  : Slide 2 visible
+        // 10–11  : Slide 2 OUT / Slide 3 IN
+        // 11–15  : Slide 3 visible
+        // 15–17  : Slide 3 OUT (gentle slow exit)
+        // 17–18  : empty buffer at the end
+        // ============================================================
 
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: containerRef.current,
                 start: "top top",
-                end: "+=3000", 
+                end: "+=2400", 
                 pin: true,     
                 pinSpacing: true, 
-                scrub: 1,     
+                scrub: 0.8,     
                 anticipatePin: 1,
             }
         });
 
-        slides.forEach((_, i) => {
-            if (i === 0) return; 
-            
-            const prevSlide = slideElements[i - 1];
-            const currentSlide = slideElements[i];
-            
-            // 1. Text Slide Transition - Simpler Logic
-            tl.to(prevSlide, { 
-                autoAlpha: 0, 
-                y: -30, 
-                filter: "blur(10px)",
-                duration: 1,
-                ease: "power2.inOut",
-                onComplete: () => gsap.set(prevSlide, { display: "none" })
-            })
-            .set(currentSlide, { display: "flex" }) 
-            .fromTo(currentSlide, { 
-                autoAlpha: 0, 
-                y: 30, 
-                filter: "blur(10px)"
-            }, {
-                autoAlpha: 1, 
-                y: 0, 
-                filter: "blur(0px)", 
-                duration: 1,
-                ease: "power2.out"
-            }, "<+=0.2"); 
-        });
+        // --- Slide 1 entrance (scrub-controlled, reverses on scroll back) ---
+        tl.fromTo(slideElements[0], 
+          { autoAlpha: 0, y: 30, filter: "blur(10px)" },
+          { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "power2.out" },
+          0
+        );
+
+        // --- Slide transitions ---
+        // Slide 1 → Slide 2 at position 5
+        tl.to(slideElements[0], { 
+            autoAlpha: 0, y: -30, filter: "blur(10px)",
+            duration: 1, ease: "power2.inOut",
+        }, 5);
+        tl.fromTo(slideElements[1], 
+            { autoAlpha: 0, y: 30, filter: "blur(10px)" },
+            { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "power2.out" },
+            5.2
+        );
+
+        // Slide 2 → Slide 3 at position 10
+        if (slideElements.length > 2) {
+          tl.to(slideElements[1], { 
+              autoAlpha: 0, y: -30, filter: "blur(10px)",
+              duration: 1, ease: "power2.inOut",
+          }, 10);
+          tl.fromTo(slideElements[2], 
+              { autoAlpha: 0, y: 30, filter: "blur(10px)" },
+              { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "power2.out" },
+              10.2
+          );
+        }
+
+        // --- Last slide gentle exit ---
+        const lastSlide = slideElements[slideElements.length - 1];
+        tl.to(lastSlide, {
+            autoAlpha: 0,
+            y: -25,
+            filter: "blur(6px)",
+            duration: 2,
+            ease: "power1.inOut",
+        }, 15);
 
     }, containerRef);
     return () => ctx.revert();
@@ -146,9 +172,9 @@ export const About = () => {
             {/* Left Column: 3D Visual Anchor */}
             <div 
               ref={leftColRef}
-              className="relative h-[40vh] w-full flex items-center justify-start pointer-events-none order-2 lg:order-1"
+              className="relative h-[40vh] w-full flex items-center justify-start order-2 lg:order-1"
             >
-               <div className="absolute w-[80vw] md:w-[80vw] h-[calc(100%+600px)] -top-[330px] lg:left-[calc(-50vw+50%)] left-[-10vw] z-40">
+               <div className="absolute w-[80vw] md:w-[80vw] h-[calc(100%+600px)] -top-[330px] lg:left-[calc(-50vw+50%)] left-[-10vw] z-40 pointer-events-auto">
                   <TechStructure3D />
                </div>
             </div>
