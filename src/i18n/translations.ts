@@ -71,6 +71,33 @@ export const pt = {
       designDesc: "Interfaces limpas, acessíveis e focadas em conversão."
     }
   },
+  projectModal: {
+    threeD: {
+      kicker: "3D na web",
+      backgroundWord: "Cena, Luz e Render",
+      titleLines: ["3D", "Camera", "Ação"],
+      textBlocks: [
+        {
+          eyebrow: "criação e maquete",
+          ghost: "maquete",
+          lines: ["Forma", "escala", "presença"],
+          body: "Blender entra como uma das ferramentas dentro de um pipeline que passa por modelagem, maquetes e direção visual para experiências 3D na web."
+        },
+        {
+          eyebrow: "luz e atmosfera",
+          ghost: "lighting",
+          lines: ["Iluminação", "marca", "ritmo"],
+          body: "A luz não serve só para valorizar o render. Ela organiza foco, profundidade, contraste, leitura de produto e ação dentro da cena."
+        },
+        {
+          eyebrow: "acabamento final",
+          ghost: "render",
+          lines: ["Render", "fecha", "intenção"],
+          body: "Do material ao enquadramento final, cada asset entra como parte de uma linguagem visual que mistura câmera, render, apresentação comercial e web."
+        }
+      ]
+    }
+  },
   contact: {
     title: "Vamos construir algo que funcione no ",
     titleHighlight: "mundo real.",
@@ -193,6 +220,33 @@ export const en = {
       aiDesc: "Three.js scenes, spatial storytelling and immersive product experiences.",
       design: "DESIGN",
       designDesc: "From concept to high fidelity with precision."
+    }
+  },
+  projectModal: {
+    threeD: {
+      kicker: "3D for web",
+      backgroundWord: "Scene, Light and Render",
+      titleLines: ["3D", "Camera", "Action"],
+      textBlocks: [
+        {
+          eyebrow: "creation and mockup",
+          ghost: "mockup",
+          lines: ["Form", "scale", "presence"],
+          body: "Blender shows up here as one tool inside a broader pipeline that includes modeling, mockups and visual direction for web-native 3D experiences."
+        },
+        {
+          eyebrow: "light and atmosphere",
+          ghost: "lighting",
+          lines: ["Lighting", "sets", "rhythm"],
+          body: "Light is not only there to polish the render. It controls focus, depth, contrast, product readability and action inside the scene."
+        },
+        {
+          eyebrow: "final finish",
+          ghost: "render",
+          lines: ["Render", "locks", "intent"],
+          body: "From material work to final framing, every asset becomes part of a visual language that blends camera, render, commercial presentation and web."
+        }
+      ]
     }
   },
   contact: {

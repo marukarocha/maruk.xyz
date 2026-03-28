@@ -1,4 +1,4 @@
-import { motion, MotionValue, useTransform } from 'framer-motion';
+import { motion, MotionValue, useScroll, useTransform } from 'framer-motion';
 import {
   ExternalLink,
   Github,
@@ -20,6 +20,7 @@ import {
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import type { ProjectData } from '../../data/projects';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface ModalLayoutProps {
   project: ProjectData;
@@ -206,10 +207,15 @@ const visualSpaceAssets: VisualAsset[] = [
   { src: assetSrc('/port/3d/CharacterII.mp4'), label: 'CharacterII.mp4', kind: 'video', sizeLabel: '14.6 MB' },
   { src: assetSrc('/port/3d/Craby-22.jpg'), label: 'Craby-22.jpg', kind: 'image', sizeLabel: '460 KB', resolution: '3472x1860' },
   { src: assetSrc('/port/3d/Dragon.jpg'), label: 'Dragon.jpg', kind: 'image', sizeLabel: '48 KB', resolution: '617x617' },
+  { src: assetSrc('/port/3d/Hidromel.webp'), label: 'Hidromel.webp', kind: 'image', sizeLabel: '99 KB', resolution: '1536x1024' },
+  { src: assetSrc('/port/3d/coletivo.webp'), label: 'coletivo.webp', kind: 'image', sizeLabel: '75 KB', resolution: '1536x1024' },
+  { src: assetSrc('/port/3d/devconf.png'), label: 'devconf.png', kind: 'image', sizeLabel: '2.2 MB', resolution: '1536x1024' },
+  { src: assetSrc('/port/3d/dinofim.webp'), label: 'dinofim.webp', kind: 'image', sizeLabel: '159 KB', resolution: '1536x1024' },
   { src: assetSrc('/port/3d/balão.mp4'), label: 'balão.mp4', kind: 'video', sizeLabel: '12.4 MB' },
   { src: assetSrc('/port/3d/capacete.mp4'), label: 'capacete.mp4', kind: 'video', sizeLabel: '3.1 MB' },
   { src: assetSrc('/port/3d/flyerWind.mp4'), label: 'flyerWind.mp4', kind: 'video', sizeLabel: '15.5 MB' },
   { src: assetSrc('/port/3d/fone_.mp4'), label: 'fone_.mp4', kind: 'video', sizeLabel: '7.8 MB' },
+  { src: assetSrc('/port/3d/garra.mp4'), label: 'garra.mp4', kind: 'video', sizeLabel: '4.7 MB', resolution: '1280x720' },
   { src: assetSrc('/port/3d/rig olhos.mp4'), label: 'rig olhos.mp4', kind: 'video', sizeLabel: '3.4 MB' },
   { src: assetSrc('/port/3d/Stage1_VP8.webm'), label: 'Stage1_VP8.webm', kind: 'video', sizeLabel: '1.2 MB' },
   { src: assetSrc('/port/3d/CEnario Valor Carreira2.jpg'), label: 'CEnario Valor Carreira2.jpg', kind: 'image', sizeLabel: '139 KB', resolution: '1280x720' },
@@ -239,25 +245,28 @@ function getAssetGridClasses(asset: VisualAsset, index: number, expanded: boolea
   const resolvedRatio = ratio ?? dimensions?.ratio;
 
   if (expanded) {
-    if (resolvedRatio && resolvedRatio < 0.82) return 'md:col-span-1 xl:col-span-2';
-    if (resolvedRatio && resolvedRatio > 1.7) return 'md:col-span-2 xl:col-span-3';
-    return 'md:col-span-2 xl:col-span-2';
+    if (resolvedRatio && resolvedRatio < 0.82) return 'md:col-span-1 xl:col-span-1 2xl:col-span-2';
+    if (resolvedRatio && resolvedRatio > 1.85) return 'md:col-span-2 xl:col-span-3 2xl:col-span-3';
+    if (resolvedRatio && resolvedRatio > 1.3) return 'md:col-span-2 xl:col-span-2 2xl:col-span-3';
+    return 'md:col-span-2 xl:col-span-2 2xl:col-span-2';
   }
 
   if (asset.kind === 'video') {
-    if (resolvedRatio && resolvedRatio > 1.25) return 'md:col-span-2 xl:col-span-2';
-    if (resolvedRatio && resolvedRatio < 0.82) return 'xl:col-span-1';
-    if (index % 4 === 0) return 'md:col-span-2 xl:col-span-2';
-    return '';
+    if (resolvedRatio && resolvedRatio > 1.65) return 'md:col-span-2 xl:col-span-2 2xl:col-span-3';
+    if (resolvedRatio && resolvedRatio < 0.82) return 'md:col-span-1 xl:col-span-1 2xl:col-span-1';
+    return 'md:col-span-1 xl:col-span-1 2xl:col-span-2';
   }
 
-  if (resolvedRatio && resolvedRatio > 1.7) return 'md:col-span-2';
+  if (resolvedRatio && resolvedRatio > 1.95) return 'md:col-span-2 xl:col-span-3 2xl:col-span-3';
+  if (resolvedRatio && resolvedRatio > 1.45) return index % 3 === 0 ? 'md:col-span-2 xl:col-span-2 2xl:col-span-3' : 'md:col-span-2 xl:col-span-2 2xl:col-span-2';
+  if (resolvedRatio && resolvedRatio < 0.82) return 'md:col-span-1 xl:col-span-1 2xl:col-span-1';
   return '';
 }
 
 function getTextGridClasses(index: number) {
-  if (index % 3 === 0) return 'md:col-span-2 xl:col-span-2';
-  return '';
+  if (index % 3 === 0) return 'md:col-span-2 xl:col-span-2 2xl:col-span-2 md:-my-4 xl:-my-6';
+  if (index % 3 === 1) return 'md:col-span-1 xl:col-span-1 2xl:col-span-1 md:-mt-8 xl:-mt-10 md:ml-auto';
+  return 'md:col-span-2 xl:col-span-3 2xl:col-span-2 md:-mb-4 xl:-mb-6';
 }
 
 export function FrontendLayout({ project }: ModalLayoutProps) {
@@ -638,18 +647,6 @@ function MotionMasonryCard({
   const dimensions = getAssetDimensions(asset);
   const ratio = asset.kind === 'video' ? videoRatio : dimensions?.ratio;
 
-  const play = () => {
-    if (asset.kind !== 'video' || !videoRef.current) return;
-    void videoRef.current.play();
-    setIsPlaying(true);
-  };
-
-  const pause = () => {
-    if (asset.kind !== 'video' || !videoRef.current) return;
-    videoRef.current.pause();
-    setIsPlaying(false);
-  };
-
   const toggle = () => {
     if (asset.kind !== 'video' || !videoRef.current) return;
     if (videoRef.current.paused) {
@@ -675,12 +672,11 @@ function MotionMasonryCard({
   return (
     <motion.article
       ref={cardRef}
-      layout
-      initial={{ opacity: 0, y: 28 }}
+      initial={{ opacity: 0, y: 90 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: (index % 5) * 0.04 }}
-      viewport={{ once: true, amount: 0.12 }}
-      className={`motion-space-panel group relative overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#08101c]/86 shadow-[0_20px_60px_rgba(0,0,0,0.22)] transition-colors ${getAssetGridClasses(
+      transition={{ duration: 0.72, delay: (index % 5) * 0.04, ease: [0.22, 1, 0.36, 1] }}
+      viewport={{ once: true, amount: 0.08 }}
+      className={`motion-space-panel group relative z-10 overflow-hidden bg-[#070b12] shadow-[0_18px_40px_rgba(0,0,0,0.18)] ${getAssetGridClasses(
         asset,
         index,
         expanded,
@@ -690,15 +686,11 @@ function MotionMasonryCard({
     >
       {asset.kind === 'image' ? (
         <button type="button" onClick={onToggleExpand} className="block h-full w-full text-left" aria-label={`Expandir ${asset.label}`}>
-          <img src={asset.src} alt={asset.label} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/42 via-transparent to-transparent" />
+          <img src={asset.src} alt={asset.label} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.01]" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/26 via-transparent to-transparent" />
         </button>
       ) : (
         <div
-          onMouseEnter={play}
-          onMouseLeave={() => {
-            if (!expanded) pause();
-          }}
           className="relative h-full w-full"
         >
           <button type="button" onClick={toggle} className="block h-full w-full text-left" aria-label={`Tocar ${asset.label}`}>
@@ -721,7 +713,7 @@ function MotionMasonryCard({
                 className={ratio ? 'absolute inset-0 h-full w-full object-contain' : 'block h-auto w-full object-contain'}
               />
             </div>
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/58 via-transparent to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/36 via-transparent to-transparent" />
           </button>
           <button
             type="button"
@@ -729,7 +721,7 @@ function MotionMasonryCard({
               event.stopPropagation();
               toggle();
             }}
-            className="absolute bottom-4 left-4 rounded-full border border-white/14 bg-black/35 p-2 text-white/82 backdrop-blur-sm transition hover:border-cyan-200/35 hover:text-cyan-200"
+            className="absolute bottom-4 left-4 bg-black/28 p-2 text-white/82 transition hover:text-cyan-100"
             aria-label={isPlaying ? `Pausar ${asset.label}` : `Tocar ${asset.label}`}
           >
             {isPlaying ? <Pause size={14} className="text-cyan-200" /> : <Play size={14} className="translate-x-[1px] text-cyan-200" />}
@@ -740,7 +732,7 @@ function MotionMasonryCard({
               event.stopPropagation();
               toggleExpandedVideo();
             }}
-            className="absolute bottom-4 right-4 rounded-full border border-white/12 bg-black/35 p-2 text-white/78 backdrop-blur-sm transition hover:border-cyan-200/35 hover:text-cyan-200"
+            className="absolute bottom-4 right-4 bg-black/28 p-2 text-white/78 transition hover:text-cyan-100"
             aria-label={expanded ? `Recolher ${asset.label}` : `Expandir ${asset.label}`}
           >
             {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
@@ -748,7 +740,7 @@ function MotionMasonryCard({
         </div>
       )}
       {asset.kind === 'image' && (
-        <div className="pointer-events-none absolute bottom-4 right-4 rounded-full border border-white/12 bg-black/35 p-2 text-white/78 backdrop-blur-sm">
+        <div className="pointer-events-none absolute bottom-4 right-4 bg-black/28 p-2 text-white/78">
           {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </div>
       )}
@@ -761,83 +753,106 @@ function MotionTextBlock({
   lines,
   body,
   index,
+  ghost,
 }: {
   eyebrow: string;
   lines: string[];
   body?: string;
   index: number;
+  ghost?: string;
 }) {
+  const textRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: textRef,
+    offset: ['start end', 'end start'],
+  });
+  const travel = index % 2 === 0 ? 56 : -48;
+  const y = useTransform(scrollYProgress, [0, 0.5, 1], [travel, 0, -travel]);
+  const opacity = useTransform(scrollYProgress, [0, 0.18, 0.45, 1], [0.1, 0.5, 1, 0.75]);
+  const textAlignClass = index % 3 === 1 ? 'text-right md:ml-auto' : 'text-left';
+
   return (
     <motion.article
-      layout
+      ref={textRef}
       initial={{ opacity: 0, y: 28 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.48, delay: (index % 4) * 0.05 }}
       viewport={{ once: true, amount: 0.18 }}
-      className={`motion-space-panel rounded-[1.9rem] border border-white/10 bg-[linear-gradient(145deg,#0b1322_0%,#07101c_54%,#0c1627_100%)] p-6 sm:p-7 ${getTextGridClasses(
+      className={`relative z-20 px-2 sm:px-4 ${getTextGridClasses(
         index
       )}`}
-      style={{ minHeight: index % 2 === 0 ? 260 : 220 }}
+      style={{ y, opacity }}
     >
-      <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-white/36">{eyebrow}</p>
-      <div className="mt-4 space-y-1">
-        {lines.map((line, lineIndex) => (
+      <div className={`relative max-w-[34rem] ${textAlignClass}`}>
+        {ghost && (
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 overflow-hidden">
+            <p className="text-[clamp(3.5rem,12vw,10rem)] font-black uppercase leading-none tracking-[-0.1em] text-white/[0.05] blur-[1px]">
+              {ghost}
+            </p>
+          </div>
+        )}
+        <p className="relative z-10 text-[10px] font-mono uppercase tracking-[0.32em] text-white/34">{eyebrow}</p>
+        <div className="relative z-10 mt-4 space-y-1">
+          {lines.map((line, lineIndex) => (
+            <p
+              key={`${line}-${lineIndex}`}
+              className={`text-[clamp(2.2rem,6vw,5.8rem)] font-black uppercase leading-[0.84] tracking-[-0.09em] ${
+                lineIndex === lines.length - 1 ? 'text-cyan-100' : 'text-white'
+              }`}
+            >
+              {line}
+            </p>
+          ))}
+        </div>
+        {body && (
           <p
-            key={`${line}-${lineIndex}`}
-            className={`text-[clamp(1.6rem,4vw,3.4rem)] font-black uppercase leading-[0.88] tracking-[-0.08em] ${
-              lineIndex === lines.length - 1 ? 'text-cyan-200' : 'text-white'
+            className={`relative z-10 mt-4 max-w-md text-sm leading-relaxed text-white/50 sm:text-[15px] ${
+              index % 3 === 1 ? 'ml-auto' : ''
             }`}
           >
-            {line}
+            {body}
           </p>
-        ))}
+        )}
       </div>
-      {body && <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/54">{body}</p>}
     </motion.article>
   );
 }
 
 export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutProps) {
+  const { t } = useLanguage();
   const { shortDescription, role, tags, techStack, images, links } = project;
   const motionRootRef = useRef<HTMLDivElement>(null);
   const assetNodesRef = useRef<Record<string, HTMLElement | null>>({});
   const [expandedAssetSrc, setExpandedAssetSrc] = useState<string | null>(null);
   const progressScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
   const isThreeDModule = project.id === 'pdv-showcase' || project.id.includes('3d');
+  const threeDTexts = t.projectModal.threeD;
 
   const streamItems = useMemo(() => {
     if (!isThreeDModule) return [];
 
-    const textBlocks = [
-      {
-        id: 'text-1',
-        eyebrow: '3d rhythm',
-        lines: ['Light', 'mesh', 'timing'],
-        body: 'Cortes de cena, material e iluminacao aparecem como uma linha continua entre estudos e entregas reais.',
-      },
-      {
-        id: 'text-2',
-        eyebrow: 'scene building',
-        lines: ['Camera', 'space', 'depth'],
-        body: 'Frames estaticos e takes em movimento dividem o mesmo grid para mostrar escala, atmosfera e direcao.',
-      },
-      {
-        id: 'text-3',
-        eyebrow: 'visual systems',
-        lines: ['Render', 'motion', 'form'],
-        body: 'Sem player central: o proprio scroll organiza objetos, superficies e narrativa tridimensional.',
-      },
-    ];
+    const textBlocks = threeDTexts.textBlocks.map((block, index) => ({
+      id: `text-${index + 1}`,
+      ...block,
+    }));
 
     const items: Array<{ type: 'asset'; asset: VisualAsset } | { type: 'text'; block: (typeof textBlocks)[number] }> = [];
-    const shuffledAssets = shuffleAssets(visualSpaceAssets);
+    const shuffledImages = shuffleAssets(visualSpaceAssets.filter((asset) => asset.kind === 'image'));
+    const shuffledVideos = shuffleAssets(visualSpaceAssets.filter((asset) => asset.kind === 'video')).slice(0, 4);
+    const mixedAssets = [...shuffledImages];
+
+    shuffledVideos.forEach((video, videoIndex) => {
+      const insertAt = Math.min(mixedAssets.length, 2 + videoIndex * Math.max(3, Math.floor(shuffledImages.length / Math.max(1, shuffledVideos.length))));
+      mixedAssets.splice(insertAt, 0, video);
+    });
+
     const textInsertIndexes = [
-      Math.max(1, Math.floor(shuffledAssets.length * 0.14)),
-      Math.max(4, Math.floor(shuffledAssets.length * 0.45)),
-      Math.max(8, Math.floor(shuffledAssets.length * 0.74)),
+      Math.max(1, Math.floor(mixedAssets.length * 0.16)),
+      Math.max(4, Math.floor(mixedAssets.length * 0.46)),
+      Math.max(8, Math.floor(mixedAssets.length * 0.76)),
     ];
 
-    shuffledAssets.forEach((asset, index) => {
+    mixedAssets.forEach((asset, index) => {
       textInsertIndexes.forEach((insertIndex, textIndex) => {
         if (index === insertIndex) items.push({ type: 'text', block: textBlocks[textIndex] });
       });
@@ -845,7 +860,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
     });
 
     return items;
-  }, [isThreeDModule]);
+  }, [isThreeDModule, threeDTexts]);
 
   const motionVideos = useMemo(() => {
     if (isThreeDModule) return [];
@@ -1421,9 +1436,9 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
         <div className="motion-space-glow-a absolute left-0 top-24 h-56 w-56 rounded-full bg-cyan-300/10 blur-3xl" />
         <div className="motion-space-glow-b absolute right-0 top-20 h-72 w-72 rounded-full bg-orange-300/8 blur-3xl" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-24">
+        <div className="relative z-10 mx-auto w-full max-w-[1440px] px-6 pb-24 pt-24 sm:px-8 xl:px-12 2xl:px-16">
           <div className="mb-12 flex items-center justify-between">
-            <span className="motion-space-kicker text-[11px] font-mono uppercase tracking-[0.32em] text-white/46">3D space</span>
+            <span className="motion-space-kicker text-[11px] font-mono uppercase tracking-[0.32em] text-white/46">{threeDTexts.kicker}</span>
             <button
               onClick={onClose}
               className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-[11px] font-mono uppercase tracking-[0.2em] text-white/72 transition hover:border-white/28 hover:text-white"
@@ -1435,21 +1450,34 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
           </div>
 
           <div>
-            <div className="space-y-1">
-              {['3D', 'Visual', 'Space'].map((word, index, words) => (
-                <div key={`${word}-${index}`} className="overflow-hidden">
-                  <h1
-                    className={`motion-space-word text-[clamp(3.2rem,10vw,7.8rem)] font-black uppercase leading-[0.82] tracking-[-0.09em] ${
-                      index === words.length - 1 ? 'text-cyan-200' : 'text-white'
-                    }`}
-                  >
-                    {word}
-                  </h1>
-                </div>
-              ))}
+            <div className="relative max-w-[1180px]">
+              <div className="pointer-events-none absolute inset-x-0 top-10 hidden overflow-hidden xl:block">
+                <p className="motion-space-word translate-y-10 text-[clamp(6rem,16vw,14rem)] font-black uppercase leading-[0.8] tracking-[-0.12em] text-white/[0.05] blur-[2px]">
+                  {threeDTexts.backgroundWord}
+                </p>
+              </div>
+
+              <div className="space-y-5 md:space-y-6">
+                {threeDTexts.titleLines.map((label, index) => (
+                  <div key={`${label}-${index}`} className="overflow-hidden py-1 md:py-2">
+                    <div className="relative">
+                      <p className="pointer-events-none absolute inset-x-0 top-1/2 hidden -translate-y-1/2 text-[clamp(3.5rem,11vw,9rem)] font-black uppercase tracking-[-0.1em] text-white/[0.06] md:block">
+                        {label}
+                      </p>
+                      <h1
+                        className={`motion-space-word relative z-10 text-[clamp(3.8rem,11vw,8.8rem)] font-black uppercase leading-[0.88] tracking-[-0.1em] ${
+                          index === threeDTexts.titleLines.length - 1 ? 'text-cyan-100' : 'text-white'
+                        }`}
+                      >
+                        {label}
+                      </h1>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <p className="motion-space-copy mt-8 max-w-2xl text-sm leading-relaxed text-white/60 sm:text-base">{shortDescription}</p>
+            <p className="motion-space-copy mt-10 max-w-2xl text-sm leading-relaxed text-white/56 sm:text-base">{shortDescription}</p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               {[role, ...(tags ?? []).slice(0, 2)].filter(Boolean).map((item) => (
@@ -1468,7 +1496,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
               ))}
             </div>
 
-            <div className="motion-space-stream mt-14 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:grid-flow-dense">
+            <div className="motion-space-stream mt-16 grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 [grid-auto-flow:dense]">
               {streamItems.map((item, index) =>
                 item.type === 'asset' ? (
                   <MotionMasonryCard
@@ -1489,6 +1517,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
                     eyebrow={item.block.eyebrow}
                     lines={item.block.lines}
                     body={item.block.body}
+                    ghost={item.block.ghost}
                     index={index}
                   />
                 )
