@@ -15,6 +15,7 @@ import { useLanguage } from './i18n/LanguageContext';
 import { PlaygroundLayout } from './playground/PlaygroundLayout';
 import { PlaygroundIndex } from './playground/PlaygroundIndex';
 import { ExperimentView } from './playground/ExperimentView';
+import { TechConsultingPage } from './pages/TechConsultingPage';
 
 // Portfolio — the main site
 const Portfolio = () => {
@@ -61,6 +62,7 @@ function App() {
     <Routes>
       {/* Portfolio */}
       <Route path="/" element={<Portfolio />} />
+      <Route path="/consultoria-informatica" element={<TechConsultingPage />} />
 
       {/* Playground */}
       <Route path="/playground" element={<PlaygroundLayout />}>

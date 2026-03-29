@@ -106,6 +106,19 @@ export const Navigation = () => {
               </motion.a>
             ))}
 
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.85 }}
+            >
+              <Link
+                to="/consultoria-informatica"
+                className="text-[11px] font-mono text-cyan-200/70 hover:text-cyan-100 transition-colors duration-300 uppercase tracking-[0.15em]"
+              >
+                Suporte
+              </Link>
+            </motion.div>
+
             {/* Playground link */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -176,6 +189,13 @@ export const Navigation = () => {
                   {item.label}
                 </a>
               ))}
+              <Link
+                to="/consultoria-informatica"
+                onClick={() => setIsOpen(false)}
+                className="text-sm font-mono text-cyan-200/70 hover:text-cyan-100 transition-colors uppercase tracking-[0.2em] py-2"
+              >
+                Suporte
+              </Link>
               <Link
                 to="/playground"
                 onClick={() => setIsOpen(false)}
