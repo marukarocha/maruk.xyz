@@ -1,4 +1,4 @@
-import { motion, MotionValue, useScroll, useTransform } from 'framer-motion';
+import { motion, MotionValue, useInView, useScroll, useTransform } from 'framer-motion';
 import {
   ExternalLink,
   Github,
@@ -15,7 +15,6 @@ import {
   Maximize2,
   Minimize2,
   Play,
-  Pause,
 } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
@@ -642,36 +641,77 @@ function MotionMasonryCard({
   cardRef?: (node: HTMLElement | null) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const articleRef = useRef<HTMLElement | null>(null);
+  const isNearViewport = useInView(articleRef, { once: true, margin: '320px 0px 320px 0px' });
   const [videoRatio, setVideoRatio] = useState<number | null>(null);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(asset.kind === 'image');
+  const [shouldAutoplayVideo, setShouldAutoplayVideo] = useState(false);
   const dimensions = getAssetDimensions(asset);
-  const ratio = asset.kind === 'video' ? videoRatio : dimensions?.ratio;
+  const ratio = asset.kind === 'video' ? videoRatio ?? 16 / 9 : dimensions?.ratio;
 
-  const toggle = () => {
-    if (asset.kind !== 'video' || !videoRef.current) return;
-    if (videoRef.current.paused) {
-      void videoRef.current.play();
-      setIsPlaying(true);
+  useEffect(() => {
+    if (asset.kind === 'image') return;
+    if (expanded || isNearViewport) {
+      setShouldLoadVideo(true);
+    }
+  }, [asset.kind, expanded, isNearViewport]);
+
+  const playVideo = () => {
+    if (!videoRef.current) return;
+    const playPromise = videoRef.current.play();
+    if (playPromise) {
+      void playPromise.catch(() => {
+        setShouldAutoplayVideo(false);
+      });
+    }
+  };
+
+  const seekToPreviewFrame = () => {
+    if (!videoRef.current) return;
+    try {
+      videoRef.current.currentTime = 0.01;
+    } catch {
+      // Some browsers can reject seeks before enough data is buffered.
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (asset.kind !== 'video') return;
+    if (!shouldLoadVideo) {
+      setShouldLoadVideo(true);
+      setShouldAutoplayVideo(true);
       return;
     }
+    setShouldAutoplayVideo(true);
+    playVideo();
+  };
+
+  const handleMouseLeave = () => {
+    if (asset.kind !== 'video' || !videoRef.current) return;
+    setShouldAutoplayVideo(false);
     videoRef.current.pause();
-    setIsPlaying(false);
+    seekToPreviewFrame();
   };
 
   const toggleExpandedVideo = () => {
-    if (asset.kind !== 'video' || !videoRef.current) return;
+    if (asset.kind !== 'video') return;
     if (!expanded) {
+      setShouldLoadVideo(true);
+      setShouldAutoplayVideo(true);
       onToggleExpand();
-      void videoRef.current.play();
-      setIsPlaying(true);
+      playVideo();
       return;
     }
+    setShouldAutoplayVideo(false);
     onToggleExpand();
   };
 
   return (
     <motion.article
-      ref={cardRef}
+      ref={(node) => {
+        articleRef.current = node;
+        cardRef?.(node);
+      }}
       initial={{ opacity: 0, y: 90 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.72, delay: (index % 5) * 0.04, ease: [0.22, 1, 0.36, 1] }}
@@ -686,46 +726,45 @@ function MotionMasonryCard({
     >
       {asset.kind === 'image' ? (
         <button type="button" onClick={onToggleExpand} className="block h-full w-full text-left" aria-label={`Expandir ${asset.label}`}>
-          <img src={asset.src} alt={asset.label} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.01]" />
+          <img
+            src={asset.src}
+            alt={asset.label}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.01]"
+          />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/26 via-transparent to-transparent" />
         </button>
       ) : (
-        <div
-          className="relative h-full w-full"
-        >
-          <button type="button" onClick={toggle} className="block h-full w-full text-left" aria-label={`Tocar ${asset.label}`}>
-            <div className="relative h-full w-full bg-[#030712]">
+        <div className="relative h-full w-full" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+          <div className="relative h-full w-full">
+            {shouldLoadVideo ? (
               <video
                 ref={videoRef}
                 src={asset.src}
                 muted
                 loop
                 playsInline
-                preload="metadata"
+                preload="auto"
                 onLoadedMetadata={(event) => {
                   const { videoWidth, videoHeight } = event.currentTarget;
                   if (videoWidth && videoHeight) {
                     setVideoRatio(videoWidth / videoHeight);
                   }
                 }}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                className={ratio ? 'absolute inset-0 h-full w-full object-contain' : 'block h-auto w-full object-contain'}
+                onLoadedData={() => {
+                  seekToPreviewFrame();
+                  if (shouldAutoplayVideo) {
+                    playVideo();
+                  }
+                }}
+                className="absolute inset-0 h-full w-full object-contain"
               />
-            </div>
+            ) : (
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_55%),linear-gradient(180deg,#08101c_0%,#04070d_100%)]" />
+            )}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/36 via-transparent to-transparent" />
-          </button>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              toggle();
-            }}
-            className="absolute bottom-4 left-4 bg-black/28 p-2 text-white/82 transition hover:text-cyan-100"
-            aria-label={isPlaying ? `Pausar ${asset.label}` : `Tocar ${asset.label}`}
-          >
-            {isPlaying ? <Pause size={14} className="text-cyan-200" /> : <Play size={14} className="translate-x-[1px] text-cyan-200" />}
-          </button>
+          </div>
           <button
             type="button"
             onClick={(event) => {
@@ -838,7 +877,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
 
     const items: Array<{ type: 'asset'; asset: VisualAsset } | { type: 'text'; block: (typeof textBlocks)[number] }> = [];
     const shuffledImages = shuffleAssets(visualSpaceAssets.filter((asset) => asset.kind === 'image'));
-    const shuffledVideos = shuffleAssets(visualSpaceAssets.filter((asset) => asset.kind === 'video')).slice(0, 4);
+    const shuffledVideos = shuffleAssets(visualSpaceAssets.filter((asset) => asset.kind === 'video'));
     const mixedAssets = [...shuffledImages];
 
     shuffledVideos.forEach((video, videoIndex) => {
