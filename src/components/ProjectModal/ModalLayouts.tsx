@@ -19,7 +19,7 @@ import {
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import type { ProjectData } from '../../data/projects';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '../../i18n/useLanguage';
 
 interface ModalLayoutProps {
   project: ProjectData;

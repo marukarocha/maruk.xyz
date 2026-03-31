@@ -1,8 +1,8 @@
-import { useRef, useLayoutEffect } from 'react';
+import { useRef, useLayoutEffect, useMemo } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { TechStructure3D } from '../components/TechStructure3D';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage } from '../i18n/useLanguage';
 
 // Registrar plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -55,11 +55,11 @@ export const About = () => {
   const leftColRef = useRef<HTMLDivElement>(null);
 
   const { t } = useLanguage();
-  const slides = t.about.slides || [];
+  const slides = useMemo(() => t.about.slides ?? [], [t.about.slides]);
   
   useLayoutEffect(() => {
     
-    let ctx = gsap.context(() => {
+    const ctx = gsap.context(() => {
         // Setup slides
         const slideElements = gsap.utils.toArray<HTMLElement>('.about-slide');
         

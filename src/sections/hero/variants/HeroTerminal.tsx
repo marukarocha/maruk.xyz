@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { HeroShell } from '../HeroShell';
 import Logo from '/images/logo.svg';
 import gsap from 'gsap';
-import { useLanguage } from '../../../i18n/LanguageContext';
+import { useLanguage } from '../../../i18n/useLanguage';
 
 /** Typewriter hook — types each line character by character. */
 function useTypewriter(lines: string[], charSpeed = 26) {

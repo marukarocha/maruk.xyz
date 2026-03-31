@@ -152,7 +152,7 @@ const LiquidPlane = () => {
       uResolution: { value: new THREE.Vector2(size.width, size.height) },
       uMouse: { value: new THREE.Vector2(0, 0) }
     }),
-    [] // Keep empty, we update via ref
+    [size.height, size.width]
   );
 
   return (

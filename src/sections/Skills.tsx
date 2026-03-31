@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Plus, Minus, ArrowUpRight, Code2, Box, Cpu, Palette } from 'lucide-react';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage } from '../i18n/useLanguage';
 import { useProjectModal } from '../hooks/useProjectModal';
 import Earth3D from '../components/Earth3D';
 

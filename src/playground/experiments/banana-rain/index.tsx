@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF, Detailed, Environment } from '@react-three/drei';
 import { EffectComposer, DepthOfField, ToneMapping } from '@react-three/postprocessing';
+import type { GLTF } from 'three-stdlib';
 
 interface BananaData {
   y: number;
@@ -12,11 +13,22 @@ interface BananaData {
   rZ: number;
 }
 
+type BananaGLTF = GLTF & {
+  nodes: {
+    banana_high: THREE.Mesh;
+    banana_mid: THREE.Mesh;
+    banana_low: THREE.Mesh;
+  };
+  materials: {
+    skin: THREE.Material;
+  };
+};
+
 function Banana({ index, z, speed }: { index: number; z: number; speed: number }) {
   const ref = useRef<THREE.LOD>(null);
   const { viewport, camera } = useThree();
   const { width, height } = viewport.getCurrentViewport(camera, [0, 0, -z]);
-  const { nodes, materials } = useGLTF('/3d/banana-v1-transformed.glb') as any;
+  const { nodes, materials } = useGLTF('/3d/banana-v1-transformed.glb') as unknown as BananaGLTF;
 
   const [data] = useState<BananaData>({
     y: THREE.MathUtils.randFloatSpread(height * 2),

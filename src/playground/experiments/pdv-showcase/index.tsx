@@ -441,6 +441,10 @@ const PDVShowcase = () => {
     const container = containerRef.current;
     if (!container || initedRef.current) return;
     initedRef.current = true;
+    const pointerTarget = pointerTargetRef.current;
+    const pointerCurrent = pointerCurrentRef.current;
+    const previousCameraOffset = previousCameraOffsetRef.current;
+    const previousTargetOffset = previousTargetOffsetRef.current;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#06070a');
@@ -762,10 +766,10 @@ const PDVShowcase = () => {
       controlsRef.current = null;
       hotspotsRef.current = [];
       hotspotMeshesRef.current = {} as Record<HotspotId, THREE.Mesh>;
-      pointerTargetRef.current.set(0, 0);
-      pointerCurrentRef.current.set(0, 0);
-      previousCameraOffsetRef.current.set(0, 0, 0);
-      previousTargetOffsetRef.current.set(0, 0, 0);
+      pointerTarget.set(0, 0);
+      pointerCurrent.set(0, 0);
+      previousCameraOffset.set(0, 0, 0);
+      previousTargetOffset.set(0, 0, 0);
       revealedHotspotIdsRef.current = [];
 
       if (container.contains(renderer.domElement)) {

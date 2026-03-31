@@ -15,4 +15,4 @@ export const getProjectById = (id: string): ProjectData | undefined => {
   return projects.find(p => p.id === id);
 };
 
-export * from './types';
+export type { ProjectData } from './types';

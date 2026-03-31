@@ -88,6 +88,9 @@ interface DrinkInfo {
   originalMaterials: Map<THREE.Mesh, THREE.Material | THREE.Material[]>;
 }
 
+type BokehUniformKey = 'focus' | 'aperture' | 'maxblur';
+type BokehUniforms = Record<BokehUniformKey, { value: number }>;
+
 // Dark silhouette material for non-active cans
 const darkMaterial = new THREE.MeshStandardMaterial({
   color: 0x0a0a14,
@@ -158,7 +161,7 @@ const DrinksExperience = () => {
         // ── Active: restore original materials, scale up ──
         drink.meshes.forEach((mesh) => {
           const orig = drink.originalMaterials.get(mesh);
-          if (orig) mesh.material = orig as any;
+          if (orig) mesh.material = orig;
         });
 
         gsap.to(drink.node.scale, {
@@ -189,7 +192,7 @@ const DrinksExperience = () => {
         if (showInactiveTexturesRef.current) {
           drink.meshes.forEach((mesh) => {
             const orig = drink.originalMaterials.get(mesh);
-            if (orig) mesh.material = orig as any;
+            if (orig) mesh.material = orig;
           });
         } else {
           drink.meshes.forEach((mesh) => {
@@ -919,9 +922,9 @@ const DrinksExperience = () => {
             <div className="pointer-events-auto flex flex-col gap-1.5 bg-black/40 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/5 shrink-0">
               <p className="text-[8px] font-mono text-white/30 uppercase tracking-widest mb-0.5">Depth of Field</p>
               {[
-                { label: 'Focus', key: 'focus', min: 0.5, max: 20, step: 0.1, initial: 4.8 },
-                { label: 'Aperture', key: 'aperture', min: 0, max: 0.01, step: 0.0001, initial: 0.0045 },
-                { label: 'Blur', key: 'maxblur', min: 0, max: 0.03, step: 0.001, initial: 0.014 },
+                { label: 'Focus', key: 'focus' as const, min: 0.5, max: 20, step: 0.1, initial: 4.8 },
+                { label: 'Aperture', key: 'aperture' as const, min: 0, max: 0.01, step: 0.0001, initial: 0.0045 },
+                { label: 'Blur', key: 'maxblur' as const, min: 0, max: 0.03, step: 0.001, initial: 0.014 },
               ].map(({ label, key, min, max, step, initial }) => (
                 <label key={key} className="flex items-center gap-2 text-[9px] font-mono text-white/40">
                   <span className="w-14">{label}</span>
@@ -936,7 +939,8 @@ const DrinksExperience = () => {
                       const val = parseFloat(e.target.value);
                       const bp = bokehPassRef.current;
                       if (bp) {
-                        (bp.uniforms as any)[key].value = val;
+                        const uniforms = bp.uniforms as BokehUniforms;
+                        uniforms[key].value = val;
                       }
                       const span = document.getElementById(`dof-${key}`);
                       if (span) span.textContent = val.toFixed(step < 0.001 ? 4 : step < 0.01 ? 3 : 1);
@@ -963,7 +967,7 @@ const DrinksExperience = () => {
                         if (next) {
                           drink.meshes.forEach((mesh) => {
                             const orig = drink.originalMaterials.get(mesh);
-                            if (orig) mesh.material = orig as any;
+                            if (orig) mesh.material = orig;
                           });
                         } else {
                           drink.meshes.forEach((mesh) => {

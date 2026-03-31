@@ -11,7 +11,7 @@
  *   // no endExperience: director.playOutro();
  */
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
@@ -373,5 +373,8 @@ export function useCameraDirector({
     shake.current.decay     = decay;
   }, []);
 
-  return { tick, playIntro, playOutro, reset, jumpTo, currentShotId, triggerShake };
+  return useMemo(
+    () => ({ tick, playIntro, playOutro, reset, jumpTo, currentShotId, triggerShake }),
+    [jumpTo, playIntro, playOutro, reset, tick, triggerShake],
+  );
 }

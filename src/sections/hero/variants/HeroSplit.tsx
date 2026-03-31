@@ -2,7 +2,7 @@ import { useRef, useLayoutEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { HeroShell } from '../HeroShell';
 import gsap from 'gsap';
-import { useLanguage } from '../../../i18n/LanguageContext';
+import { useLanguage } from '../../../i18n/useLanguage';
 
 /**
  * HeroSplit — layout editorial esquerda / direita.

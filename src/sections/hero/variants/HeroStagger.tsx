@@ -3,7 +3,7 @@ import { ChevronDown, Github, Box, Instagram } from 'lucide-react';
 import { HeroShell } from '../HeroShell';
 import Logo from '/images/logo.svg';
 import gsap from 'gsap';
-import { useLanguage } from '../../../i18n/LanguageContext';
+import { useLanguage } from '../../../i18n/useLanguage';
 
 const SOCIAL = [
   { Icon: Github,    href: 'https://github.com/marukarocha/',     label: 'GitHub' },

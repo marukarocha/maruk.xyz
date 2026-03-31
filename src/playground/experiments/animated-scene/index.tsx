@@ -113,7 +113,7 @@ const AnimatedScene = () => {
     } else {
       tc.detach();
     }
-  }, [showCharGizmo]);
+  }, [charModelRef, showCharGizmo]);
   useEffect(() => {
     charGizmoModeRef.current = charGizmoMode;
     const tc = transformControlsRef.current;
@@ -127,7 +127,7 @@ const AnimatedScene = () => {
     const s = char.scale.x;
     const text = `position: { x: ${p.x.toFixed(3)}, y: ${p.y.toFixed(3)}, z: ${p.z.toFixed(3)} }  scale: ${s.toFixed(4)}`;
     navigator.clipboard.writeText(text).catch(() => {});
-  }, []);
+  }, [charModelRef]);
 
   const togglePlay = useCallback(() => {
     setIsPlaying(prev => {
@@ -169,7 +169,7 @@ const AnimatedScene = () => {
       renderer.toneMappingExposure = 0;
     }
     cameraDirector.playIntro();
-  }, []);
+  }, [cameraDirector]);
 
   const endExperience = useCallback(() => {
     if (finishedRef.current) return;
@@ -219,7 +219,7 @@ const AnimatedScene = () => {
 
     // Show finished state immediately (overlay appears during fade)
     setFinished(true);
-  }, []);
+  }, [cameraDirector]);
 
   const replayExperience = useCallback(() => {
     setFinished(false);
@@ -263,7 +263,7 @@ const AnimatedScene = () => {
     const renderer = rendererRef.current;
     if (renderer) renderer.toneMappingExposure = 0;
     cameraDirector.reset();
-  }, []);
+  }, [cameraDirector, resetCharToStart]);
 
   const rewindAnim = useCallback(() => {
     actionsRef.current.forEach(a => { a.time = 0; });
@@ -284,7 +284,7 @@ const AnimatedScene = () => {
     const clipName = charActions[charIdx].getClip().name;
     switchCharClip(clipName);
     setCurrentCharIdx(charIdx);
-  }, [switchCharClip]);
+  }, [charActionsRef, switchCharClip]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -1207,10 +1207,9 @@ const AnimatedScene = () => {
       actionsRef.current = [];
 
       // Stop audio
-      const audio = audioRef.current;
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
+      if (audioEl) {
+        audioEl.pause();
+        audioEl.currentTime = 0;
       }
 
       controls.dispose();
@@ -1241,7 +1240,7 @@ const AnimatedScene = () => {
       }
       initedRef.current = false;
     };
-  }, []);
+  }, [cameraDirector, charMixerRef, charModelRef, endExperience, loadCharacter, resetCharToStart, tickByAudioTime]);
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);

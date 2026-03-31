@@ -11,7 +11,7 @@ import { ProjectModal } from './components/ProjectModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Loader } from './components/Loader';
 import { SectionCursor } from './components/SectionCursor';
-import { useLanguage } from './i18n/LanguageContext';
+import { useLanguage } from './i18n/useLanguage';
 import { PlaygroundLayout } from './playground/PlaygroundLayout';
 import { PlaygroundIndex } from './playground/PlaygroundIndex';
 import { ExperimentView } from './playground/ExperimentView';

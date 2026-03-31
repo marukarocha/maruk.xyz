@@ -1,10 +1,12 @@
-import { useRef, useLayoutEffect, type ReactNode } from 'react';
+import { useRef, useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Search, Map, Hammer, Sparkles, Rocket, Target } from 'lucide-react';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage } from '../i18n/useLanguage';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const STORY_THEMES = ['dark', 'light', 'dark', 'light', 'dark', 'light'] as const;
 
 // Large background icons for each step (rendered as watermark)
 const BgIcon = ({ index, theme }: { index: number; theme: string }) => {
@@ -215,12 +217,14 @@ export const StoryTelling = () => {
 
   const { t } = useLanguage();
 
-  const themes = ['dark', 'light', 'dark', 'light', 'dark', 'light'];
-
-  const storyCards = (t.storytelling?.cards || []).map((card: any, index: number) => ({
-    ...card,
-    theme: themes[index % themes.length],
-  }));
+  const storyCards = useMemo(
+    () =>
+      (t.storytelling.cards ?? []).map((card, index) => ({
+        ...card,
+        theme: STORY_THEMES[index % STORY_THEMES.length],
+      })),
+    [t.storytelling.cards],
+  );
 
   const cardCount = storyCards.length;
   const desktopTrackWidth = cardCount * 50;
@@ -489,7 +493,7 @@ export const StoryTelling = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [storyCards]);
+  }, [cardCount, desktopTrackWidth, mobileTrackWidth, storyCards]);
 
   return (
     <section
@@ -552,7 +556,7 @@ export const StoryTelling = () => {
           style={{ width: `${mobileTrackWidth}vw` }}
         >
           {/* Cards with per-card connectors */}
-          {storyCards.map((card: any, index: number) => (
+          {storyCards.map((card, index) => (
             <div
               key={index}
               className={`process-card w-screen md:w-[50vw] h-full flex flex-col justify-center relative shrink-0 ${

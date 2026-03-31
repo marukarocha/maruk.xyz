@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage } from '../i18n/useLanguage';
 import { Link } from 'react-router-dom';
 
 export const Footer = () => {

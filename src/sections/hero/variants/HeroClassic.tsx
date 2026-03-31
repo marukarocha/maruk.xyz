@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { HeroShell } from '../HeroShell';
 import Logo from '/images/logo.svg';
 import gsap from 'gsap';
-import { useLanguage } from '../../../i18n/LanguageContext';
+import { useLanguage } from '../../../i18n/useLanguage';
 
 /**
  * HeroClassic — the original hero.

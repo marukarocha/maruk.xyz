@@ -311,7 +311,7 @@ export const SectionCursor = ({
       section.removeEventListener('pointerout', onPointerOutInteractive);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [sectionId, cursorColor, cursorHoverColor, cursorSize, cursorHoverSize, config]);
+  }, [sectionId, preset, cursorColor, cursorHoverColor, cursorSize, cursorHoverSize, config]);
 
   if (preset === 'none') return null;
 

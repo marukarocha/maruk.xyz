@@ -19,7 +19,7 @@
  *   • The mixer never sees total weight < 1, so it never falls back to bind pose.
  */
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { TIMELINE, FADE_DURATION } from './timeline';
@@ -257,13 +257,16 @@ export function useCharacterAnimator() {
     );
   }, [activateClip]);
 
-  return {
-    charModelRef,
-    charMixerRef,
-    charActionsRef,
-    loadCharacter,
-    switchClip,
-    tickByAudioTime,
-    resetToStart,
-  };
+  return useMemo(
+    () => ({
+      charModelRef,
+      charMixerRef,
+      charActionsRef,
+      loadCharacter,
+      switchClip,
+      tickByAudioTime,
+      resetToStart,
+    }),
+    [loadCharacter, resetToStart, switchClip, tickByAudioTime],
+  );
 }
