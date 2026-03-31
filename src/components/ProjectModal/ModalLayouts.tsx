@@ -16,7 +16,7 @@ import {
   Minimize2,
   Play,
 } from 'lucide-react';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import type { ProjectData } from '../../data/projects';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -951,7 +951,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
     }
 
     return shuffled;
-  }, [isThreeDModule, motionVideos, project.id]);
+  }, [isThreeDModule, motionVideos]);
 
   const [topStripVideos, bottomStripVideos] = useMemo(() => {
     if (isThreeDModule) return [[], []] as [typeof shuffledMotionVideos, typeof shuffledMotionVideos];
@@ -1150,7 +1150,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
       const separator = activeMotionVideo.embedUrl.includes('?') ? '&' : '?';
       return `${activeMotionVideo.embedUrl}${separator}autoplay=1&playsinline=1`;
     }
-  }, [activeMotionVideo, playerFrameId, playerResetKey]);
+  }, [activeMotionVideo, playerFrameId]);
 
   const selectMotionVideo = (signature: string | null) => {
     if (!signature) return;
@@ -1158,7 +1158,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
     setPlayerResetKey((current) => current + 1);
   };
 
-  const playNextMotionVideo = () => {
+  const playNextMotionVideo = useCallback(() => {
     if (motionVideos.length === 0) return;
     const currentIndex = motionVideos.findIndex((video) => video.signature === activeVideoSignature);
     const nextVideo = motionVideos[((currentIndex >= 0 ? currentIndex : 0) + 1) % motionVideos.length];
@@ -1166,7 +1166,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
       setActiveVideoSignature(nextVideo.signature);
       setPlayerResetKey((current) => current + 1);
     }
-  };
+  }, [activeVideoSignature, motionVideos]);
 
   useEffect(() => {
     if (isThreeDModule || !activeMotionVideo || isHostedVideoAsset(activeMotionVideo.url) || !playerFrameRef.current) return;
@@ -1238,7 +1238,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
       disposed = true;
       destroyPlayer?.();
     };
-  }, [activeMotionVideo, isThreeDModule, playerResetKey]);
+  }, [activeMotionVideo, isThreeDModule, playNextMotionVideo, playerResetKey]);
 
   if (!isThreeDModule) {
     return (

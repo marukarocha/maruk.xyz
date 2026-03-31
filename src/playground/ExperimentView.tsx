@@ -4,12 +4,17 @@ import { experiments } from './registry';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const ExperimentLoader = () => (
-  <div className="w-full h-[calc(100vh-3.5rem)] flex items-center justify-center bg-[#050505]">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-5 h-5 border border-white/20 rounded-full animate-spin border-t-white/60" />
-      <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
-        Loading experiment...
+  <div className="w-full h-[calc(100vh-3.5rem)] flex items-center justify-center bg-[#f0dfca]">
+    <div className="relative w-full">
+      <div className="h-[3px] w-full bg-[#efb47d]/38" />
+      <div className="absolute left-0 top-0 h-[3px] w-[36%] animate-pulse bg-[#ff8a1e] shadow-[0_0_22px_rgba(255,138,30,0.42)]" />
+      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[calc(50%+1.9rem)] text-[clamp(2rem,7vw,4.75rem)] font-black uppercase tracking-[-0.06em] text-[#e46f10]">
+        Loading
       </span>
+      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-[1rem] text-[11px] font-mono uppercase tracking-[0.32em] text-[#9b6333]">
+        preparing scene
+      </span>
+      <div className="absolute inset-y-[-9px] left-[36%] w-px bg-[#ff8a1e]/80 shadow-[0_0_18px_rgba(255,138,30,0.45)]" />
     </div>
   </div>
 );

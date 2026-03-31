@@ -47,4 +47,13 @@ export const experiments: Experiment[] = [
     status: 'live',
     component: lazy(() => import('./experiments/pdv-showcase')),
   },
+  {
+    id: 'bike-cargo',
+    title: 'Bike Cargo Product',
+    description: 'Experiencia de produto para uma bike cargo com viewer 3D, views guiadas e interface editorial para apresentar forma, carga e presenca visual.',
+    tags: ['three.js', 'glb', 'product-page', 'camera', 'gsap', 'showcase'],
+    date: '2026-03-29',
+    status: 'wip',
+    component: lazy(() => import('./experiments/bike-cargo')),
+  },
 ];
