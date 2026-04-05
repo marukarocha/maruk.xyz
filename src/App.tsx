@@ -16,6 +16,7 @@ import { PlaygroundLayout } from './playground/PlaygroundLayout';
 import { PlaygroundIndex } from './playground/PlaygroundIndex';
 import { ExperimentView } from './playground/ExperimentView';
 import { TechConsultingPage } from './pages/TechConsultingPage';
+import { RecruiterProfilePage } from './pages/RecruiterProfilePage';
 
 // Portfolio — the main site
 const Portfolio = () => {
@@ -62,6 +63,8 @@ function App() {
     <Routes>
       {/* Portfolio */}
       <Route path="/" element={<Portfolio />} />
+      <Route path="/perfil" element={<RecruiterProfilePage />} />
+      <Route path="/cv" element={<RecruiterProfilePage />} />
       <Route path="/consultoria-informatica" element={<TechConsultingPage />} />
 
       {/* Playground */}

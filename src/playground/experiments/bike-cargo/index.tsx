@@ -80,6 +80,16 @@ const BIKE_GALLERY_ENDCAP = {
   title: 'CADA ENTREGA VIRA CENA',
   body: 'No fechamento, o produto deixa de ser só transporte e passa a ser presença. A composição mistura utilidade, memória e pequenos rituais urbanos em uma leitura mais emocional do uso real.',
 };
+const BIKE_MODEL_URL = '/3d/bike.glb';
+const BIKE_BOOT_ASSET_URLS = Array.from(
+  new Set([
+    BIKE_MODEL_URL,
+    ORANGE_CARGO_LOGO_URL,
+    BIKE_GALLERY_HERO_IMAGE,
+    ...BIKE_GALLERY_ITEMS.flatMap((item) => (item.type === 'image' ? [item.src] : [])),
+    BIKE_GALLERY_ENDCAP.src,
+  ]),
+);
 
 function tuneBikeSurfaceMaterial(material: THREE.Material, isDark: boolean) {
   if (!(material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial)) return;
@@ -99,7 +109,49 @@ function tuneBikeSurfaceMaterial(material: THREE.Material, isDark: boolean) {
   material.needsUpdate = true;
 }
 
-const OrangeBikeExperiment = () => {
+type OrangeBikeExperimentProps = {
+  externalLoader?: boolean;
+  onSceneReady?: () => void;
+};
+
+type BikeMaterialBaseState = {
+  opacity: number;
+  transparent: boolean;
+  depthWrite: boolean;
+  wireframe: boolean;
+  map?: THREE.Texture | null;
+  color?: string;
+  emissive?: string;
+  emissiveIntensity?: number;
+  metalness?: number;
+  roughness?: number;
+  envMapIntensity?: number;
+};
+
+type FloorMaterialBaseState = {
+  color: string;
+  opacity: number;
+  roughness?: number;
+  metalness?: number;
+  clearcoat?: number;
+  clearcoatRoughness?: number;
+  reflectivity?: number;
+  sheen?: number;
+  sheenColor?: string;
+  emissive?: string;
+  emissiveIntensity?: number;
+};
+
+type SizeStageFloorMaterials = {
+  base: THREE.MeshStandardMaterial | null;
+  plate: THREE.MeshPhysicalMaterial | null;
+  inner: THREE.MeshPhysicalMaterial | null;
+  glow: THREE.MeshBasicMaterial | null;
+  ring: THREE.MeshBasicMaterial | null;
+  outerRing: THREE.MeshBasicMaterial | null;
+};
+
+const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBikeExperimentProps) => {
   const shellRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const initedRef = useRef(false);
@@ -114,6 +166,9 @@ const OrangeBikeExperiment = () => {
   const pointerCurrentRef = useRef(new THREE.Vector2());
   const previousCameraOffsetRef = useRef(new THREE.Vector3());
   const previousTargetOffsetRef = useRef(new THREE.Vector3());
+  const stageTransitionAudioRef = useRef<HTMLAudioElement | null>(null);
+  const urbanAmbienceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const urbanAmbienceTweenRef = useRef<gsap.core.Tween | null>(null);
   const modelRootRef = useRef<THREE.Group | null>(null);
   const modelMeshesRef = useRef<THREE.Mesh[]>([]);
   const frameFocusRootRef = useRef<THREE.Object3D | null>(null);
@@ -131,6 +186,15 @@ const OrangeBikeExperiment = () => {
   const cargoDogTweenRef = useRef<gsap.core.Timeline | null>(null);
   const cargoDogLoadStartedRef = useRef(false);
   const frameIsolationActiveRef = useRef(false);
+  const sizeWireframeActiveRef = useRef(false);
+  const sizeStageFloorMaterialsRef = useRef<SizeStageFloorMaterials>({
+    base: null,
+    plate: null,
+    inner: null,
+    glow: null,
+    ring: null,
+    outerRing: null,
+  });
   const activeStageIdRef = useRef<StageId>('overview');
   const rearSequenceProgressRef = useRef(0);
   const modelBaseYRef = useRef(0);
@@ -145,12 +209,20 @@ const OrangeBikeExperiment = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorTargetPositionRef = useRef({ x: 0, y: 0 });
   const cursorCurrentPositionRef = useRef({ x: 0, y: 0 });
+  const bootLoadedAssetsRef = useRef<Set<string>>(new Set());
+  const bootModelReadyRef = useRef(false);
+  const bootRevealStartedRef = useRef(false);
+  const bootLifecycleActiveRef = useRef(true);
+  const loaderRevealTimeoutRef = useRef<number | null>(null);
+  const loaderHideTimeoutRef = useRef<number | null>(null);
   const eyebrowRef = useRef<HTMLParagraphElement>(null);
   const titleWrapRef = useRef<HTMLDivElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const scrollHintRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLElement>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState<number | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingPhase, setLoadingPhase] = useState<'loading' | 'revealing'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [activeStageId, setActiveStageId] = useState<StageId>('overview');
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -169,6 +241,103 @@ const OrangeBikeExperiment = () => {
     rearSequenceProgressRef.current = clamped;
     setRearSequenceProgress((current) => (Math.abs(current - clamped) < 0.0001 ? current : clamped));
   }, []);
+
+  const playStageTransitionSwoosh = useCallback(() => {
+    const audio = stageTransitionAudioRef.current;
+    if (!audio) return;
+
+    audio.pause();
+    audio.currentTime = 0;
+    void audio.play().catch(() => {});
+  }, []);
+
+  const syncUrbanAmbience = useCallback(() => {
+    const audio = urbanAmbienceAudioRef.current;
+    const shell = shellRef.current;
+    const footer = footerRef.current;
+    if (!audio) return;
+
+    const isUrbanStage = activeStageIdRef.current === FINAL_STAGE_ID;
+    const baseVolume = 0.42;
+    let targetVolume = 0;
+
+    if (isUrbanStage) {
+      targetVolume = baseVolume;
+
+      if (rearSequenceProgressRef.current >= 1 && shell && footer) {
+        const footerTriggerScroll = Math.max(0, footer.offsetTop - shell.clientHeight);
+        const fadeStartScroll = Math.max(0, footerTriggerScroll - shell.clientHeight * 0.85);
+        const fadeDistance = Math.max(footerTriggerScroll - fadeStartScroll, 1);
+        const fadeProgress = Math.max(0, Math.min((shell.scrollTop - fadeStartScroll) / fadeDistance, 1));
+        targetVolume = baseVolume * (1 - fadeProgress);
+      }
+
+      if (audio.paused) {
+        audio.currentTime = 0;
+        void audio.play().catch(() => {});
+      }
+    }
+
+    urbanAmbienceTweenRef.current?.kill();
+    urbanAmbienceTweenRef.current = gsap.to(audio, {
+      volume: targetVolume,
+      duration: 0.45,
+      ease: 'power2.out',
+      overwrite: true,
+      onComplete: () => {
+        if (targetVolume <= 0.001 && activeStageIdRef.current !== FINAL_STAGE_ID) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      },
+    });
+  }, []);
+
+  const queueLoaderReveal = useCallback(() => {
+    if (bootRevealStartedRef.current || !bootLifecycleActiveRef.current) return;
+
+    bootRevealStartedRef.current = true;
+    setLoadingProgress(100);
+
+    if (loaderRevealTimeoutRef.current) {
+      window.clearTimeout(loaderRevealTimeoutRef.current);
+    }
+
+    if (loaderHideTimeoutRef.current) {
+      window.clearTimeout(loaderHideTimeoutRef.current);
+    }
+
+    loaderRevealTimeoutRef.current = window.setTimeout(() => {
+      if (!bootLifecycleActiveRef.current) return;
+      setLoadingPhase('revealing');
+    }, 120);
+
+    loaderHideTimeoutRef.current = window.setTimeout(() => {
+      if (!bootLifecycleActiveRef.current) return;
+      setLoading(false);
+    }, 1180);
+  }, []);
+
+  const syncBootLoadingProgress = useCallback(() => {
+    if (!bootLifecycleActiveRef.current) return;
+
+    const loadedCount = bootLoadedAssetsRef.current.size;
+    const progress = Math.min(100, Math.round((loadedCount / BIKE_BOOT_ASSET_URLS.length) * 100));
+    setLoadingProgress(progress);
+
+    if (loadedCount >= BIKE_BOOT_ASSET_URLS.length && bootModelReadyRef.current) {
+      queueLoaderReveal();
+    }
+  }, [queueLoaderReveal]);
+
+  const markBootAssetLoaded = useCallback(
+    (assetUrl: string) => {
+      if (!bootLifecycleActiveRef.current || bootLoadedAssetsRef.current.has(assetUrl)) return;
+      bootLoadedAssetsRef.current.add(assetUrl);
+      syncBootLoadingProgress();
+    },
+    [syncBootLoadingProgress],
+  );
 
   const animateCamera = useCallback((pose: CameraPose) => {
     const camera = cameraRef.current;
@@ -619,13 +788,333 @@ const OrangeBikeExperiment = () => {
     });
   }, []);
 
+  const syncSizeWireframe = useCallback((stageId: StageId) => {
+    const meshes = modelMeshesRef.current;
+    const isDarkTheme = theme === 'dark';
+    const floorMaterials = sizeStageFloorMaterialsRef.current;
+    if (!meshes.length && !Object.values(floorMaterials).some(Boolean)) return;
+
+    const shouldUseWireframe = stageId === 'size';
+    const wasUsingWireframe = sizeWireframeActiveRef.current;
+    if (shouldUseWireframe === wasUsingWireframe) return;
+
+    sizeWireframeActiveRef.current = shouldUseWireframe;
+    const sketchBikeColor = new THREE.Color('#072e62');
+    const sketchBikeEmissive = new THREE.Color(isDarkTheme ? '#0e1f2f' : '#d7ebff');
+
+    meshes.forEach((mesh) => {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+
+      materials.forEach((material) => {
+        const wireframeMaterial = material as THREE.Material & { wireframe?: boolean };
+        if (typeof wireframeMaterial.wireframe !== 'boolean') return;
+
+        const materialState =
+          (material.userData.bikeBaseState as
+            | BikeMaterialBaseState
+            | undefined) ??
+          (() => {
+            const surfaceMaterial =
+              material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial ? material : null;
+            const baseState = {
+              opacity: material.opacity,
+              transparent: material.transparent,
+              depthWrite: material.depthWrite,
+              wireframe: wireframeMaterial.wireframe,
+              map: surfaceMaterial?.map ?? null,
+              color: surfaceMaterial ? `#${surfaceMaterial.color.getHexString()}` : undefined,
+              emissive: surfaceMaterial ? `#${surfaceMaterial.emissive.getHexString()}` : undefined,
+              emissiveIntensity: surfaceMaterial?.emissiveIntensity,
+              metalness: surfaceMaterial?.metalness,
+              roughness: surfaceMaterial?.roughness,
+              envMapIntensity: surfaceMaterial?.envMapIntensity,
+            };
+            material.userData.bikeBaseState = baseState;
+            return baseState;
+          })();
+        const surfaceMaterial =
+          material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial ? material : null;
+
+        const existingTimeline = material.userData.bikeWireframeTimeline as gsap.core.Timeline | undefined;
+        existingTimeline?.kill();
+        gsap.killTweensOf(material);
+        if (surfaceMaterial) {
+          gsap.killTweensOf(surfaceMaterial.color);
+          gsap.killTweensOf(surfaceMaterial.emissive);
+        }
+
+        if (shouldUseWireframe) {
+          material.transparent = true;
+          material.depthWrite = false;
+
+          const enterTimeline = gsap.timeline({
+            onComplete: () => {
+              material.userData.bikeWireframeTimeline = null;
+            },
+          });
+
+          enterTimeline
+            .to(material, {
+              opacity: Math.max(0.06, materialState.opacity * 0.14),
+              duration: 0.18,
+              ease: 'power2.inOut',
+              onUpdate: () => {
+                material.needsUpdate = true;
+              },
+              onComplete: () => {
+                if (surfaceMaterial) {
+                  surfaceMaterial.map = null;
+                  surfaceMaterial.color.copy(sketchBikeColor);
+                  surfaceMaterial.emissive.copy(sketchBikeEmissive);
+                  surfaceMaterial.emissiveIntensity = isDarkTheme ? 0.12 : 0.08;
+                  surfaceMaterial.metalness = 0.02;
+                  surfaceMaterial.roughness = 0.96;
+                  surfaceMaterial.envMapIntensity = 0.18;
+                }
+                wireframeMaterial.wireframe = true;
+                material.needsUpdate = true;
+              },
+            })
+            .to(material, {
+              opacity: Math.max(0.68, materialState.opacity * 0.92),
+              duration: 0.34,
+              ease: 'power2.out',
+              onUpdate: () => {
+                material.needsUpdate = true;
+              },
+            });
+
+          material.userData.bikeWireframeTimeline = enterTimeline;
+          return;
+        }
+
+        const exitTimeline = gsap.timeline({
+          onComplete: () => {
+            material.userData.bikeWireframeTimeline = null;
+          },
+        });
+
+        exitTimeline
+          .to(material, {
+            opacity: Math.max(0.08, material.opacity * 0.2),
+            duration: 0.16,
+            ease: 'power2.inOut',
+            onUpdate: () => {
+              material.needsUpdate = true;
+            },
+            onComplete: () => {
+              wireframeMaterial.wireframe = materialState.wireframe;
+              if (surfaceMaterial) {
+                surfaceMaterial.map = materialState.map ?? null;
+                if (materialState.color) surfaceMaterial.color.set(materialState.color);
+                if (materialState.emissive) surfaceMaterial.emissive.set(materialState.emissive);
+                if (typeof materialState.emissiveIntensity === 'number') {
+                  surfaceMaterial.emissiveIntensity = materialState.emissiveIntensity;
+                }
+                if (typeof materialState.metalness === 'number') surfaceMaterial.metalness = materialState.metalness;
+                if (typeof materialState.roughness === 'number') surfaceMaterial.roughness = materialState.roughness;
+                if (typeof materialState.envMapIntensity === 'number') {
+                  surfaceMaterial.envMapIntensity = materialState.envMapIntensity;
+                }
+              }
+              material.needsUpdate = true;
+            },
+          })
+          .to(material, {
+            opacity: materialState.opacity,
+            duration: 0.3,
+            ease: 'power2.out',
+            onUpdate: () => {
+              material.needsUpdate = true;
+            },
+            onComplete: () => {
+              material.transparent = materialState.transparent;
+              material.depthWrite = materialState.depthWrite;
+              material.needsUpdate = true;
+            },
+          });
+
+        material.userData.bikeWireframeTimeline = exitTimeline;
+      });
+    });
+
+    const floorTweaks: Array<{
+      material: THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial | THREE.MeshBasicMaterial | null;
+      target: FloorMaterialBaseState;
+    }> = [
+      {
+        material: floorMaterials.base,
+        target: {
+          color: '#d9edff',
+          opacity: isDarkTheme ? 0.96 : 0.9,
+          roughness: 1,
+          metalness: 0.01,
+        },
+      },
+      {
+        material: floorMaterials.plate,
+        target: {
+          color: '#c7e2ff',
+          opacity: isDarkTheme ? 0.82 : 0.74,
+          roughness: 0.84,
+          metalness: 0.02,
+          clearcoat: 0.12,
+          clearcoatRoughness: 0.82,
+          reflectivity: 0.08,
+          sheen: 0.04,
+          sheenColor: '#f4fbff',
+          emissive: '#82bfff',
+          emissiveIntensity: isDarkTheme ? 0.08 : 0.05,
+        },
+      },
+      {
+        material: floorMaterials.inner,
+        target: {
+          color: '#f7fbff',
+          opacity: isDarkTheme ? 0.26 : 0.18,
+          roughness: 0.92,
+          metalness: 0.01,
+          clearcoat: 0.08,
+          clearcoatRoughness: 0.88,
+        },
+      },
+      {
+        material: floorMaterials.glow,
+        target: {
+          color: '#78c7ff',
+          opacity: isDarkTheme ? 0.12 : 0.1,
+        },
+      },
+      {
+        material: floorMaterials.ring,
+        target: {
+          color: '#8fd6ff',
+          opacity: isDarkTheme ? 0.2 : 0.16,
+        },
+      },
+      {
+        material: floorMaterials.outerRing,
+        target: {
+          color: '#bee7ff',
+          opacity: isDarkTheme ? 0.1 : 0.08,
+        },
+      },
+    ];
+
+    floorTweaks.forEach(({ material, target }) => {
+      if (!material) return;
+
+      const materialState =
+        (material.userData.sizeFloorBaseState as FloorMaterialBaseState | undefined) ??
+        (() => {
+          const baseState: FloorMaterialBaseState = {
+            color: `#${material.color.getHexString()}`,
+            opacity: material.opacity,
+          };
+
+          if ('roughness' in material) baseState.roughness = material.roughness;
+          if ('metalness' in material) baseState.metalness = material.metalness;
+          if ('clearcoat' in material) baseState.clearcoat = material.clearcoat;
+          if ('clearcoatRoughness' in material) baseState.clearcoatRoughness = material.clearcoatRoughness;
+          if ('reflectivity' in material) baseState.reflectivity = material.reflectivity;
+          if ('sheen' in material) baseState.sheen = material.sheen;
+          if ('sheenColor' in material) baseState.sheenColor = `#${material.sheenColor.getHexString()}`;
+          if ('emissive' in material) baseState.emissive = `#${material.emissive.getHexString()}`;
+          if ('emissiveIntensity' in material) baseState.emissiveIntensity = material.emissiveIntensity;
+
+          material.userData.sizeFloorBaseState = baseState;
+          return baseState;
+        })();
+
+      gsap.killTweensOf(material);
+      gsap.killTweensOf(material.color);
+      if ('emissive' in material) gsap.killTweensOf(material.emissive);
+      if ('sheenColor' in material) gsap.killTweensOf(material.sheenColor);
+
+      const nextState = shouldUseWireframe ? target : materialState;
+      const nextColor = new THREE.Color(nextState.color);
+
+      gsap.to(material.color, {
+        r: nextColor.r,
+        g: nextColor.g,
+        b: nextColor.b,
+        duration: 0.42,
+        ease: 'power2.inOut',
+        onUpdate: () => {
+          material.needsUpdate = true;
+        },
+      });
+
+      if ('emissive' in material) {
+        const emissiveColor = new THREE.Color(nextState.emissive ?? materialState.emissive ?? '#000000');
+        gsap.to(material.emissive, {
+          r: emissiveColor.r,
+          g: emissiveColor.g,
+          b: emissiveColor.b,
+          duration: 0.42,
+          ease: 'power2.inOut',
+          onUpdate: () => {
+            material.needsUpdate = true;
+          },
+        });
+      }
+
+      if ('sheenColor' in material) {
+        const sheenColor = new THREE.Color(nextState.sheenColor ?? materialState.sheenColor ?? '#ffffff');
+        gsap.to(material.sheenColor, {
+          r: sheenColor.r,
+          g: sheenColor.g,
+          b: sheenColor.b,
+          duration: 0.42,
+          ease: 'power2.inOut',
+          onUpdate: () => {
+            material.needsUpdate = true;
+          },
+        });
+      }
+
+      gsap.to(material, {
+        opacity: nextState.opacity,
+        duration: 0.42,
+        ease: 'power2.inOut',
+        ...(typeof nextState.roughness === 'number' && 'roughness' in material ? { roughness: nextState.roughness } : {}),
+        ...(typeof nextState.metalness === 'number' && 'metalness' in material ? { metalness: nextState.metalness } : {}),
+        ...(typeof nextState.clearcoat === 'number' && 'clearcoat' in material ? { clearcoat: nextState.clearcoat } : {}),
+        ...(
+          typeof nextState.clearcoatRoughness === 'number' && 'clearcoatRoughness' in material
+            ? { clearcoatRoughness: nextState.clearcoatRoughness }
+            : {}
+        ),
+        ...(typeof nextState.reflectivity === 'number' && 'reflectivity' in material ? { reflectivity: nextState.reflectivity } : {}),
+        ...(typeof nextState.sheen === 'number' && 'sheen' in material ? { sheen: nextState.sheen } : {}),
+        ...(
+          typeof nextState.emissiveIntensity === 'number' && 'emissiveIntensity' in material
+            ? { emissiveIntensity: nextState.emissiveIntensity }
+            : {}
+        ),
+        onUpdate: () => {
+          material.needsUpdate = true;
+        },
+      });
+    });
+  }, [theme]);
+
   const focusStage = useCallback(
     (stageId: StageId) => {
       const stage = BIKE_STAGES.find((item) => item.id === stageId);
       if (!stage) return;
+      const currentIndex = BIKE_STAGES.findIndex((item) => item.id === activeStageIdRef.current);
+      const nextIndex = BIKE_STAGES.findIndex((item) => item.id === stageId);
+      const didStageChange = currentIndex !== nextIndex && nextIndex !== -1;
+
       if (stageId !== FINAL_STAGE_ID || activeStageIdRef.current !== FINAL_STAGE_ID) {
         setRearSequenceProgressValue(0);
       }
+
+      if (didStageChange) {
+        playStageTransitionSwoosh();
+      }
+
       setActiveStageId(stageId);
       setSelectedFrameSealId(null);
       animateCamera(stage.camera);
@@ -638,8 +1127,37 @@ const OrangeBikeExperiment = () => {
         ease: 'power3.inOut',
       });
     },
-    [animateCamera, animateCargoBoxes, setRearSequenceProgressValue],
+    [animateCamera, animateCargoBoxes, playStageTransitionSwoosh, setRearSequenceProgressValue],
   );
+
+  useEffect(() => {
+    const audio = new Audio('/audio/swoosh_page.mp3');
+    audio.preload = 'auto';
+    audio.volume = 0.65;
+    stageTransitionAudioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      stageTransitionAudioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = new Audio('/audio/roadforest.mp3');
+    audio.preload = 'auto';
+    audio.loop = true;
+    audio.volume = 0;
+    urbanAmbienceAudioRef.current = audio;
+
+    return () => {
+      urbanAmbienceTweenRef.current?.kill();
+      audio.pause();
+      audio.currentTime = 0;
+      urbanAmbienceAudioRef.current = null;
+      urbanAmbienceTweenRef.current = null;
+    };
+  }, []);
 
   const focusFrameSeal = useCallback(
     (sealId: FrameSealId) => {
@@ -669,7 +1187,9 @@ const OrangeBikeExperiment = () => {
     syncLoopStageAnimation(activeStageId);
     syncCargoDog(activeStageId === FINAL_STAGE_ID);
     syncFrameIsolation(activeStageId);
-  }, [activeStageId, loadCargoDog, syncCargoDog, syncFrameIsolation, syncLoopStageAnimation]);
+    syncSizeWireframe(activeStageId);
+    syncUrbanAmbience();
+  }, [activeStageId, loadCargoDog, syncCargoDog, syncFrameIsolation, syncLoopStageAnimation, syncSizeWireframe, syncUrbanAmbience]);
 
   useEffect(() => {
     const onWheel = (event: WheelEvent) => {
@@ -768,6 +1288,25 @@ const OrangeBikeExperiment = () => {
   }, [activeStageId, rearSequenceProgress]);
 
   useEffect(() => {
+    syncUrbanAmbience();
+  }, [rearSequenceProgress, syncUrbanAmbience]);
+
+  useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+
+    const handleShellScroll = () => {
+      syncUrbanAmbience();
+    };
+
+    shell.addEventListener('scroll', handleShellScroll, { passive: true });
+
+    return () => {
+      shell.removeEventListener('scroll', handleShellScroll);
+    };
+  }, [syncUrbanAmbience]);
+
+  useEffect(() => {
     const eyebrow = eyebrowRef.current;
     const titleWrap = titleWrapRef.current;
     const titleLines = titleWrap?.querySelectorAll('[data-title-line]');
@@ -854,6 +1393,12 @@ const OrangeBikeExperiment = () => {
     const container = containerRef.current;
     if (!container || initedRef.current) return;
     initedRef.current = true;
+    bootLifecycleActiveRef.current = true;
+    bootLoadedAssetsRef.current = new Set();
+    bootModelReadyRef.current = false;
+    bootRevealStartedRef.current = false;
+    setLoadingProgress(0);
+    setLoadingPhase('loading');
 
     const pointerTarget = pointerTargetRef.current;
     const pointerCurrent = pointerCurrentRef.current;
@@ -880,6 +1425,25 @@ const OrangeBikeExperiment = () => {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
+
+    const preloadedImages: HTMLImageElement[] = [];
+    let externalSceneReadyFrameA = 0;
+    let externalSceneReadyFrameB = 0;
+    if (!externalLoader) {
+      BIKE_BOOT_ASSET_URLS.filter((assetUrl) => assetUrl !== BIKE_MODEL_URL).forEach((assetUrl) => {
+        const image = new window.Image();
+        image.decoding = 'async';
+        image.onload = () => markBootAssetLoaded(assetUrl);
+        image.onerror = () => markBootAssetLoaded(assetUrl);
+        image.src = assetUrl;
+
+        if (image.complete) {
+          markBootAssetLoaded(assetUrl);
+        }
+
+        preloadedImages.push(image);
+      });
+    }
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -946,16 +1510,14 @@ const OrangeBikeExperiment = () => {
     studioLight.position.set(-2.8, 7.4, 6.2);
     scene.add(studioLight);
 
-    const floorBase = new THREE.Mesh(
-      new THREE.CircleGeometry(12.4, 96),
-      new THREE.MeshStandardMaterial({
+    const floorBaseMaterial = new THREE.MeshStandardMaterial({
         color: isDark ? '#0f0d0a' : '#eadcc8',
         roughness: isDark ? 0.94 : 0.88,
         metalness: 0.02,
         transparent: true,
         opacity: isDark ? 0.98 : 0.92,
-      }),
-    );
+      });
+    const floorBase = new THREE.Mesh(new THREE.CircleGeometry(12.4, 96), floorBaseMaterial);
     floorBase.rotation.x = -Math.PI / 2;
     floorBase.position.set(0, -0.085, 0);
     floorBase.scale.set(1.9, 0.82, 1);
@@ -982,9 +1544,7 @@ const OrangeBikeExperiment = () => {
     floorShadowFeather.receiveShadow = true;
     scene.add(floorShadowFeather);
 
-    const floorPlate = new THREE.Mesh(
-      new THREE.CircleGeometry(10.8, 80),
-      new THREE.MeshPhysicalMaterial({
+    const floorPlateMaterial = new THREE.MeshPhysicalMaterial({
         color: isDark ? '#21170f' : '#f8ecda',
         transparent: true,
         opacity: 0.98,
@@ -997,17 +1557,15 @@ const OrangeBikeExperiment = () => {
         sheenColor: new THREE.Color(isDark ? '#ffbf84' : '#fff7ed'),
         emissive: isDark ? '#25170d' : '#fff7eb',
         emissiveIntensity: isDark ? 0.1 : 0.06,
-      }),
-    );
+      });
+    const floorPlate = new THREE.Mesh(new THREE.CircleGeometry(10.8, 80), floorPlateMaterial);
     floorPlate.rotation.x = -Math.PI / 2;
     floorPlate.position.set(0, -0.05, 0);
     floorPlate.scale.set(1.68, 0.72, 1);
     floorPlate.receiveShadow = true;
     scene.add(floorPlate);
 
-    const floorInnerPlate = new THREE.Mesh(
-      new THREE.CircleGeometry(9.1, 80),
-      new THREE.MeshPhysicalMaterial({
+    const floorInnerPlateMaterial = new THREE.MeshPhysicalMaterial({
         color: isDark ? '#2a1d12' : '#fff5e8',
         transparent: true,
         opacity: isDark ? 0.5 : 0.34,
@@ -1015,55 +1573,62 @@ const OrangeBikeExperiment = () => {
         metalness: 0.02,
         clearcoat: isDark ? 0.6 : 0.48,
         clearcoatRoughness: isDark ? 0.32 : 0.24,
-      }),
-    );
+      });
+    const floorInnerPlate = new THREE.Mesh(new THREE.CircleGeometry(9.1, 80), floorInnerPlateMaterial);
     floorInnerPlate.rotation.x = -Math.PI / 2;
     floorInnerPlate.position.set(0, -0.032, 0);
     floorInnerPlate.scale.set(1.28, 0.56, 1);
     floorInnerPlate.receiveShadow = true;
     scene.add(floorInnerPlate);
 
-    const floorGlow = new THREE.Mesh(
-      new THREE.CircleGeometry(9.6, 72),
-      new THREE.MeshBasicMaterial({ color: '#ffb15a', transparent: true, opacity: isDark ? 0.06 : 0.09 }),
-    );
+    const floorGlowMaterial = new THREE.MeshBasicMaterial({
+      color: '#ffb15a',
+      transparent: true,
+      opacity: isDark ? 0.06 : 0.09,
+    });
+    const floorGlow = new THREE.Mesh(new THREE.CircleGeometry(9.6, 72), floorGlowMaterial);
     floorGlow.rotation.x = -Math.PI / 2;
     floorGlow.position.set(0, -0.045, 0);
     floorGlow.scale.set(1.84, 0.8, 1);
     scene.add(floorGlow);
 
-    const floorRing = new THREE.Mesh(
-      new THREE.RingGeometry(9.9, 10.45, 80),
-      new THREE.MeshBasicMaterial({
+    const floorRingMaterial = new THREE.MeshBasicMaterial({
         color: '#ffb15a',
         transparent: true,
         opacity: isDark ? 0.12 : 0.1,
         side: THREE.DoubleSide,
-      }),
-    );
+      });
+    const floorRing = new THREE.Mesh(new THREE.RingGeometry(9.9, 10.45, 80), floorRingMaterial);
     floorRing.rotation.x = -Math.PI / 2;
     floorRing.position.set(0, -0.04, 0);
     floorRing.scale.set(1.66, 0.72, 1);
     scene.add(floorRing);
 
-    const floorOuterRing = new THREE.Mesh(
-      new THREE.RingGeometry(10.65, 11.75, 96),
-      new THREE.MeshBasicMaterial({
+    const floorOuterRingMaterial = new THREE.MeshBasicMaterial({
         color: isDark ? '#ffb15a' : '#f0bf8c',
         transparent: true,
         opacity: isDark ? 0.06 : 0.05,
         side: THREE.DoubleSide,
-      }),
-    );
+      });
+    const floorOuterRing = new THREE.Mesh(new THREE.RingGeometry(10.65, 11.75, 96), floorOuterRingMaterial);
     floorOuterRing.rotation.x = -Math.PI / 2;
     floorOuterRing.position.set(0, -0.075, 0);
     floorOuterRing.scale.set(1.82, 0.8, 1);
     scene.add(floorOuterRing);
 
+    sizeStageFloorMaterialsRef.current = {
+      base: floorBaseMaterial,
+      plate: floorPlateMaterial,
+      inner: floorInnerPlateMaterial,
+      glow: floorGlowMaterial,
+      ring: floorRingMaterial,
+      outerRing: floorOuterRingMaterial,
+    };
+
     const loader = new GLTFLoader();
     animationClockRef.current = new THREE.Clock();
     loader.load(
-      '/3d/bike.glb',
+      BIKE_MODEL_URL,
       (gltf) => {
         const model = gltf.scene;
         modelRootRef.current = model;
@@ -1081,11 +1646,41 @@ const OrangeBikeExperiment = () => {
           modelMeshesRef.current.push(object);
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           materials.forEach((material) => {
+            const wireframeMaterial = material as THREE.Material & { wireframe?: boolean };
             tuneBikeSurfaceMaterial(material, isDark);
             material.userData.bikeBaseState = {
               opacity: material.opacity,
               transparent: material.transparent,
               depthWrite: material.depthWrite,
+              wireframe: wireframeMaterial.wireframe ?? false,
+              map:
+                material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial
+                  ? material.map ?? null
+                  : undefined,
+              color:
+                material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial
+                  ? `#${material.color.getHexString()}`
+                  : undefined,
+              emissive:
+                material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial
+                  ? `#${material.emissive.getHexString()}`
+                  : undefined,
+              emissiveIntensity:
+                material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial
+                  ? material.emissiveIntensity
+                  : undefined,
+              metalness:
+                material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial
+                  ? material.metalness
+                  : undefined,
+              roughness:
+                material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial
+                  ? material.roughness
+                  : undefined,
+              envMapIntensity:
+                material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial
+                  ? material.envMapIntensity
+                  : undefined,
             };
             material.needsUpdate = true;
           });
@@ -1147,15 +1742,25 @@ const OrangeBikeExperiment = () => {
         }
 
         syncFrameIsolation(activeStageIdRef.current);
+        syncSizeWireframe(activeStageIdRef.current);
 
-        setLoadingProgress(100);
-        setLoading(false);
+        bootModelReadyRef.current = true;
+        if (externalLoader) {
+          setLoadingProgress(100);
+          setLoadingPhase('revealing');
+          setLoading(false);
+          externalSceneReadyFrameA = window.requestAnimationFrame(() => {
+            externalSceneReadyFrameB = window.requestAnimationFrame(() => {
+              if (!bootLifecycleActiveRef.current) return;
+              onSceneReady?.();
+            });
+          });
+        } else {
+          markBootAssetLoaded(BIKE_MODEL_URL);
+        }
         animateCamera(BIKE_STAGES[0].camera);
       },
-      (event) => {
-        if (!event.total) return;
-        setLoadingProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
-      },
+      undefined,
       () => {
         setError('Nao foi possivel carregar o arquivo bike.glb.');
         setLoading(false);
@@ -1341,8 +1946,23 @@ const OrangeBikeExperiment = () => {
 
     return () => {
       initedRef.current = false;
+      bootLifecycleActiveRef.current = false;
       if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
+      if (loaderRevealTimeoutRef.current) {
+        window.clearTimeout(loaderRevealTimeoutRef.current);
+        loaderRevealTimeoutRef.current = null;
+      }
+      if (loaderHideTimeoutRef.current) {
+        window.clearTimeout(loaderHideTimeoutRef.current);
+        loaderHideTimeoutRef.current = null;
+      }
+      if (externalSceneReadyFrameA) {
+        window.cancelAnimationFrame(externalSceneReadyFrameA);
+      }
+      if (externalSceneReadyFrameB) {
+        window.cancelAnimationFrame(externalSceneReadyFrameB);
+      }
       cameraTweenRef.current?.kill();
       loopActionStopRef.current?.kill();
       modelRotationTweenRef.current?.kill();
@@ -1389,12 +2009,16 @@ const OrangeBikeExperiment = () => {
       pointerCurrent.set(0, 0);
       previousCameraOffset.set(0, 0, 0);
       previousTargetOffset.set(0, 0, 0);
+      preloadedImages.forEach((image) => {
+        image.onload = null;
+        image.onerror = null;
+      });
 
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [animateCamera, animateCargoBoxes, syncFrameIsolation, syncLoopStageAnimation, theme]);
+  }, [animateCamera, animateCargoBoxes, externalLoader, markBootAssetLoaded, onSceneReady, syncFrameIsolation, syncLoopStageAnimation, syncSizeWireframe, theme]);
 
   const activeStage = BIKE_STAGES.find((item) => item.id === activeStageId) ?? BIKE_STAGES[0];
   const isDark = theme === 'dark';
@@ -1402,8 +2026,9 @@ const OrangeBikeExperiment = () => {
   const isFrameStage = activeStage.id === 'frame';
   const isSizeStage = activeStage.id === 'size';
   const isPageLoading = loading;
-  const loadingPercent = Math.max(0, Math.min(100, loadingProgress ?? 0));
-  const loadingMarkerPosition = Math.min(95, Math.max(5, loadingPercent || 5));
+  const isLoaderRevealing = loadingPhase === 'revealing';
+  const shouldShowExperience = externalLoader || !isPageLoading || isLoaderRevealing;
+  const loadingPercent = Math.max(0, Math.min(100, loadingProgress));
   const shouldMountGallery = activeStageId === FINAL_STAGE_ID && rearSequenceProgress > REAR_SEQUENCE_CAMERA_PORTION;
   const galleryRevealProgress = Math.max(
     0,
@@ -1488,10 +2113,11 @@ const OrangeBikeExperiment = () => {
       )}
 
       <div
-        className="fixed inset-0 z-0 will-change-transform"
+        className={`fixed inset-0 z-0 will-change-transform transition-opacity duration-300 ${
+          shouldShowExperience ? 'opacity-100' : 'pointer-events-none opacity-0'
+        }`}
         style={{
           transform: 'translate3d(0, 0, 0)',
-          opacity: 1,
         }}
       >
         <div ref={containerRef} className="h-full w-full" />
@@ -1888,6 +2514,7 @@ const OrangeBikeExperiment = () => {
             </section>
 
             <footer
+              ref={footerRef}
               className={`mt-10 flex flex-col items-start justify-between gap-5 rounded-[30px] border px-6 py-6 sm:mt-12 sm:flex-row sm:items-end sm:px-8 ${
                 isDark
                   ? 'border-[#ff9b47]/14 bg-[rgba(10,8,7,0.28)]'
@@ -1924,31 +2551,42 @@ const OrangeBikeExperiment = () => {
         </div>
       )}
 
-      {isPageLoading && (
-        <div
-          className={`fixed inset-0 z-[90] flex items-center justify-center backdrop-blur-md ${
-            isDark ? 'bg-[#160a03]/96' : 'bg-[#f0dfca]'
-          }`}
-        >
-          <div className="relative w-full">
-            <div
-              className={`relative h-[4px] w-full overflow-visible ${
-                isDark ? 'bg-[#ffb15a]/18' : 'bg-[#efb47d]/38'
-              }`}
-            >
-              <div
-                className="absolute left-0 top-0 h-[4px] bg-[#ff8a1e] shadow-[0_0_24px_rgba(255,138,30,0.52)] transition-[width] duration-300 ease-out"
-                style={{ width: `${loadingPercent}%` }}
-              />
-              <div
-                className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left] duration-300 ease-out"
-                style={{ left: `${loadingMarkerPosition}%` }}
-              >
-                <span className="block text-[clamp(3rem,10vw,7rem)] font-black tracking-[-0.08em] text-[#e66d0d] drop-shadow-[0_0_24px_rgba(255,138,30,0.24)]">
-                  {loadingPercent}%
-                </span>
-              </div>
-            </div>
+      {!externalLoader && isPageLoading && (
+        <div className="pointer-events-none fixed inset-0 z-[90] overflow-hidden">
+          <div
+            className={`absolute inset-x-0 top-0 h-1/2 transition-transform duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              isDark ? 'bg-[#160a03]/96' : 'bg-[#f0dfca]/96'
+            } ${isLoaderRevealing ? '-translate-y-full' : 'translate-y-0'}`}
+          >
+            <div className={`absolute bottom-0 left-0 h-px w-full ${isDark ? 'bg-[#ffb15a]/18' : 'bg-[#efb47d]/38'}`} />
+          </div>
+          <div
+            className={`absolute inset-x-0 bottom-0 h-1/2 transition-transform duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              isDark ? 'bg-[#160a03]/96' : 'bg-[#f0dfca]/96'
+            } ${isLoaderRevealing ? 'translate-y-full' : 'translate-y-0'}`}
+          >
+            <div className={`absolute left-0 top-0 h-px w-full ${isDark ? 'bg-[#ffb15a]/18' : 'bg-[#efb47d]/38'}`} />
+          </div>
+
+          <div className={`absolute left-0 top-1/2 h-[3px] w-full -translate-y-1/2 ${isDark ? 'bg-[#ffb15a]/18' : 'bg-[#efb47d]/38'}`} />
+          <div
+            className={`absolute left-0 top-1/2 h-[3px] -translate-y-1/2 bg-[#ff8a1e] shadow-[0_0_24px_rgba(255,138,30,0.52)] transition-[width,opacity] duration-300 ease-out ${
+              isLoaderRevealing ? 'opacity-0' : 'opacity-100'
+            }`}
+            style={{ width: `${loadingPercent}%` }}
+          />
+
+          <div
+            className={`absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-500 ease-out ${
+              isLoaderRevealing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
+            }`}
+          >
+            <span className="block text-[clamp(3rem,10vw,7rem)] font-black tracking-[-0.08em] text-[#e66d0d] drop-shadow-[0_0_24px_rgba(255,138,30,0.24)]">
+              {loadingPercent}%
+            </span>
+            <span className={`mt-2 text-[10px] font-mono uppercase tracking-[0.32em] ${isDark ? 'text-[#ffcf99]/55' : 'text-[#9b6333]'}`}>
+              loading files
+            </span>
           </div>
         </div>
       )}

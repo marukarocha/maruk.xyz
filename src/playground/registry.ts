@@ -56,4 +56,13 @@ export const experiments: Experiment[] = [
     status: 'wip',
     component: lazy(() => import('./experiments/bike-cargo')),
   },
+  {
+    id: 'tshirt-lab',
+    title: 'T-Shirt 3D Studio',
+    description: 'Customizer 3D de camiseta com troca de cor e estampas em tempo real, dentro de um bloco visual limpo com vinhetagem.',
+    tags: ['three.js', 'r3f', 'product-customizer', 'canvas-texture', 'ui'],
+    date: '2026-04-02',
+    status: 'live',
+    component: lazy(() => import('./experiments/tshirt-lab')),
+  },
 ];

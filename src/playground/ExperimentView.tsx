@@ -2,19 +2,17 @@ import { useParams, Navigate, Link } from 'react-router-dom';
 import { Suspense } from 'react';
 import { experiments } from './registry';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { BikeCargoEntry } from './experiments/bike-cargo/BikeCargoEntry';
 
 const ExperimentLoader = () => (
-  <div className="w-full h-[calc(100vh-3.5rem)] flex items-center justify-center bg-[#f0dfca]">
-    <div className="relative w-full">
-      <div className="h-[3px] w-full bg-[#efb47d]/38" />
-      <div className="absolute left-0 top-0 h-[3px] w-[36%] animate-pulse bg-[#ff8a1e] shadow-[0_0_22px_rgba(255,138,30,0.42)]" />
-      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[calc(50%+1.9rem)] text-[clamp(2rem,7vw,4.75rem)] font-black uppercase tracking-[-0.06em] text-[#e46f10]">
-        Loading
+  <div className="flex h-[calc(100vh-3.5rem)] w-full items-center justify-center bg-[#050505]">
+    <div className="flex flex-col items-center gap-4 text-center">
+      <div className="h-px w-28 overflow-hidden bg-white/10">
+        <div className="h-full w-1/2 animate-pulse bg-white/55" />
+      </div>
+      <span className="text-[10px] font-mono uppercase tracking-[0.32em] text-white/38">
+        opening experiment
       </span>
-      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-[1rem] text-[11px] font-mono uppercase tracking-[0.32em] text-[#9b6333]">
-        preparing scene
-      </span>
-      <div className="absolute inset-y-[-9px] left-[36%] w-px bg-[#ff8a1e]/80 shadow-[0_0_18px_rgba(255,138,30,0.45)]" />
     </div>
   </div>
 );
@@ -56,13 +54,18 @@ export const ExperimentView = () => {
   }
 
   const ExperimentComponent = experiment.component;
+  const isBikeCargo = experiment.id === 'bike-cargo';
 
   return (
     <div className="w-full h-[calc(100vh-3.5rem)] relative">
       <ErrorBoundary fallback={<ExperimentCrash />}>
-        <Suspense fallback={<ExperimentLoader />}>
-          <ExperimentComponent />
-        </Suspense>
+        {isBikeCargo ? (
+          <BikeCargoEntry />
+        ) : (
+          <Suspense fallback={<ExperimentLoader />}>
+            <ExperimentComponent />
+          </Suspense>
+        )}
       </ErrorBoundary>
     </div>
   );

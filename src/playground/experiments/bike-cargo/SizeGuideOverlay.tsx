@@ -7,21 +7,29 @@ type SizeGuideOverlayProps = {
 };
 
 const CAMERA_SETTLE_DELAY = 1.08;
-const LENGTH_PATH = 620;
-const WIDTH_PATH = 320;
-const LENGTH_LINE = { x1: 204, y1: 682, x2: 810, y2: 682 };
-const WIDTH_LINE = { x1: 250, y1: 210, x2: 250, y2: 530 };
+const GUIDE_STROKE_WIDTH = 2.5;
+const GUIDE_DASH = '14 10';
+const LENGTH_LINE = { x1: 154, y1: 688, x2: 850, y2: 688 };
+const WIDTH_LINE = { x1: 232, y1: 184, x2: 232, y2: 556 };
+const LENGTH_TICK = {
+  start: { x: LENGTH_LINE.x1, y1: LENGTH_LINE.y1 - 38, y2: LENGTH_LINE.y1 + 38 },
+  end: { x: LENGTH_LINE.x2, y1: LENGTH_LINE.y1 - 38, y2: LENGTH_LINE.y1 + 38 },
+};
+const WIDTH_TICK = {
+  top: { x1: WIDTH_LINE.x1 - 36, x2: WIDTH_LINE.x1 + 36, y: WIDTH_LINE.y1 },
+  bottom: { x1: WIDTH_LINE.x1 - 36, x2: WIDTH_LINE.x1 + 36, y: WIDTH_LINE.y2 },
+};
 const LENGTH_LABEL = {
   x: (LENGTH_LINE.x1 + LENGTH_LINE.x2) / 2,
-  y: LENGTH_LINE.y1,
-  width: 176,
-  height: 86,
+  y: LENGTH_LINE.y1 - 2,
+  width: 188,
+  height: 88,
 };
 const WIDTH_LABEL = {
-  x: WIDTH_LINE.x1 + 122,
+  x: WIDTH_LINE.x1 + 138,
   y: (WIDTH_LINE.y1 + WIDTH_LINE.y2) / 2,
-  width: 142,
-  height: 78,
+  width: 150,
+  height: 80,
 };
 
 const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
@@ -74,8 +82,12 @@ const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
 
     if (active) {
       gsap.set(root, { opacity: 1 });
-      gsap.set(lengthLine, { strokeDasharray: LENGTH_PATH, strokeDashoffset: LENGTH_PATH });
-      gsap.set(widthLine, { strokeDasharray: WIDTH_PATH, strokeDashoffset: WIDTH_PATH });
+      gsap.set(lengthLine, {
+        attr: { x1: LENGTH_LINE.x1, y1: LENGTH_LINE.y1, x2: LENGTH_LINE.x1, y2: LENGTH_LINE.y1 },
+      });
+      gsap.set(widthLine, {
+        attr: { x1: WIDTH_LINE.x1, y1: WIDTH_LINE.y1, x2: WIDTH_LINE.x1, y2: WIDTH_LINE.y1 },
+      });
       gsap.set([lengthTickStart, lengthTickEnd, widthTickTop, widthTickBottom], { opacity: 0 });
       gsap.set(lengthLabel, { opacity: 0, y: 18 });
       gsap.set(widthLabel, { opacity: 0, y: 18 });
@@ -83,7 +95,7 @@ const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
       const timeline = gsap.timeline();
       timeline
         .to(lengthLine, {
-          strokeDashoffset: 0,
+          attr: { x2: LENGTH_LINE.x2, y2: LENGTH_LINE.y2 },
           duration: 0.52,
           ease: 'power3.out',
           delay: CAMERA_SETTLE_DELAY,
@@ -111,7 +123,7 @@ const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
         .to(
           widthLine,
           {
-            strokeDashoffset: 0,
+            attr: { x2: WIDTH_LINE.x2, y2: WIDTH_LINE.y2 },
             duration: 0.44,
             ease: 'power3.out',
           },
@@ -164,7 +176,7 @@ const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
       .to(
         widthLine,
         {
-          strokeDashoffset: WIDTH_PATH,
+          attr: { x2: WIDTH_LINE.x1, y2: WIDTH_LINE.y1 },
           duration: 0.24,
           ease: 'power2.in',
         },
@@ -173,7 +185,7 @@ const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
       .to(
         lengthLine,
         {
-          strokeDashoffset: LENGTH_PATH,
+          attr: { x2: LENGTH_LINE.x1, y2: LENGTH_LINE.y1 },
           duration: 0.24,
           ease: 'power2.in',
         },
@@ -194,11 +206,11 @@ const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
     };
   }, [active]);
 
-  const stroke = isDark ? 'rgba(255,209,163,0.95)' : 'rgba(168,84,22,0.9)';
-  const labelFill = isDark ? 'rgba(16,10,7,0.82)' : 'rgba(255,249,242,0.94)';
-  const labelStroke = isDark ? 'rgba(255,177,90,0.24)' : 'rgba(216,139,62,0.22)';
-  const eyebrowFill = isDark ? 'rgba(255,216,183,0.74)' : 'rgba(124,72,29,0.72)';
-  const valueFill = isDark ? '#ffd8b7' : '#7c481d';
+  const stroke = isDark ? 'rgba(166,221,255,0.98)' : 'rgba(72,136,198,0.92)';
+  const labelFill = isDark ? 'rgba(7,18,31,0.84)' : 'rgba(244,250,255,0.95)';
+  const labelStroke = isDark ? 'rgba(138,204,255,0.28)' : 'rgba(113,172,226,0.26)';
+  const eyebrowFill = isDark ? 'rgba(188,225,255,0.72)' : 'rgba(82,131,181,0.72)';
+  const valueFill = isDark ? '#f5fbff' : '#28588c';
 
   return (
     <div ref={rootRef} className="pointer-events-none absolute inset-0 z-[52] flex items-center justify-center opacity-0">
@@ -211,11 +223,32 @@ const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
             x2={String(LENGTH_LINE.x2)}
             y2={String(LENGTH_LINE.y2)}
             stroke={stroke}
-            strokeWidth="6"
+            strokeWidth={String(GUIDE_STROKE_WIDTH)}
             strokeLinecap="round"
+            strokeDasharray={GUIDE_DASH}
           />
-          <line ref={lengthTickStartRef} x1="204" y1="650" x2="204" y2="714" stroke={stroke} strokeWidth="6" strokeLinecap="round" />
-          <line ref={lengthTickEndRef} x1="810" y1="650" x2="810" y2="714" stroke={stroke} strokeWidth="6" strokeLinecap="round" />
+          <line
+            ref={lengthTickStartRef}
+            x1={String(LENGTH_TICK.start.x)}
+            y1={String(LENGTH_TICK.start.y1)}
+            x2={String(LENGTH_TICK.start.x)}
+            y2={String(LENGTH_TICK.start.y2)}
+            stroke={stroke}
+            strokeWidth={String(GUIDE_STROKE_WIDTH)}
+            strokeLinecap="round"
+            strokeDasharray={GUIDE_DASH}
+          />
+          <line
+            ref={lengthTickEndRef}
+            x1={String(LENGTH_TICK.end.x)}
+            y1={String(LENGTH_TICK.end.y1)}
+            x2={String(LENGTH_TICK.end.x)}
+            y2={String(LENGTH_TICK.end.y2)}
+            stroke={stroke}
+            strokeWidth={String(GUIDE_STROKE_WIDTH)}
+            strokeLinecap="round"
+            strokeDasharray={GUIDE_DASH}
+          />
 
           <line
             ref={widthLineRef}
@@ -224,11 +257,32 @@ const SizeGuideOverlay = ({ active, isDark }: SizeGuideOverlayProps) => {
             x2={String(WIDTH_LINE.x2)}
             y2={String(WIDTH_LINE.y2)}
             stroke={stroke}
-            strokeWidth="6"
+            strokeWidth={String(GUIDE_STROKE_WIDTH)}
             strokeLinecap="round"
+            strokeDasharray={GUIDE_DASH}
           />
-          <line ref={widthTickTopRef} x1="220" y1="210" x2="280" y2="210" stroke={stroke} strokeWidth="6" strokeLinecap="round" />
-          <line ref={widthTickBottomRef} x1="220" y1="530" x2="280" y2="530" stroke={stroke} strokeWidth="6" strokeLinecap="round" />
+          <line
+            ref={widthTickTopRef}
+            x1={String(WIDTH_TICK.top.x1)}
+            y1={String(WIDTH_TICK.top.y)}
+            x2={String(WIDTH_TICK.top.x2)}
+            y2={String(WIDTH_TICK.top.y)}
+            stroke={stroke}
+            strokeWidth={String(GUIDE_STROKE_WIDTH)}
+            strokeLinecap="round"
+            strokeDasharray={GUIDE_DASH}
+          />
+          <line
+            ref={widthTickBottomRef}
+            x1={String(WIDTH_TICK.bottom.x1)}
+            y1={String(WIDTH_TICK.bottom.y)}
+            x2={String(WIDTH_TICK.bottom.x2)}
+            y2={String(WIDTH_TICK.bottom.y)}
+            stroke={stroke}
+            strokeWidth={String(GUIDE_STROKE_WIDTH)}
+            strokeLinecap="round"
+            strokeDasharray={GUIDE_DASH}
+          />
 
           <g transform={`translate(${LENGTH_LABEL.x} ${LENGTH_LABEL.y})`}>
             <g ref={lengthLabelRef}>
