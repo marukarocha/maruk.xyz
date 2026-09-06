@@ -17,6 +17,11 @@ import { PlaygroundIndex } from './playground/PlaygroundIndex';
 import { ExperimentView } from './playground/ExperimentView';
 import { TechConsultingPage } from './pages/TechConsultingPage';
 import { RecruiterProfilePage } from './pages/RecruiterProfilePage';
+import { LoginPage } from './pages/LoginPage';
+import { PlaygroundLoginPage } from './pages/PlaygroundLoginPage';
+import { ConversionHomePage } from './pages/ConversionHomePage';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { PROTECTED_PLAYGROUND_IDS } from './playground/auth';
 
 // Portfolio — the main site
 const Portfolio = () => {
@@ -50,6 +55,7 @@ const Portfolio = () => {
       </ErrorBoundary>
 
       {/* Custom cursors per section */}
+      <SectionCursor sectionId="home" preset="glow" color="#ededed" hoverColor="#00ffcc" size={30} hoverSize={50} />
       <SectionCursor sectionId="about" preset="hologram" />
       <SectionCursor sectionId="skills" preset="contrast" />
       <SectionCursor sectionId="process" preset="contrast" />
@@ -62,15 +68,27 @@ function App() {
   return (
     <Routes>
       {/* Portfolio */}
-      <Route path="/" element={<Portfolio />} />
+      <Route path="/" element={<ConversionHomePage />} />
+      <Route path="/portfolio" element={<Portfolio />} />
       <Route path="/perfil" element={<RecruiterProfilePage />} />
       <Route path="/cv" element={<RecruiterProfilePage />} />
       <Route path="/consultoria-informatica" element={<TechConsultingPage />} />
+      <Route path="/login" element={<LoginPage />} />
 
       {/* Playground */}
       <Route path="/playground" element={<PlaygroundLayout />}>
         <Route index element={<PlaygroundIndex />} />
-        <Route path=":id" element={<ExperimentView />} />
+        <Route path=":id/login" element={<PlaygroundLoginPage />} />
+        <Route
+          path=":id/*"
+          element={
+            <ProtectedRoute
+              allowedPaths={[...PROTECTED_PLAYGROUND_IDS]}
+            >
+              <ExperimentView />
+            </ProtectedRoute>
+          }
+        />
       </Route>
     </Routes>
   );

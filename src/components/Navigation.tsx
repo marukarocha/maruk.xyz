@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Globe } from 'lucide-react';
+import { ArrowRight, Globe, Menu, X } from 'lucide-react';
 import { useLanguage } from '../i18n/useLanguage';
 import { Link, useLocation } from 'react-router-dom';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -11,13 +11,42 @@ export const Navigation = () => {
   const location = useLocation();
   const isHome = location.pathname === '/';
 
-  const navItems = [
-    { label: 'Home', href: '#home' },
-    { label: 'About', href: '#about' },
-    { label: 'Skills', href: '#skills' },
-    { label: 'Process', href: '#process' },
-    { label: 'Contact', href: '#contact' },
-  ];
+  const navItems = language === 'pt'
+    ? [
+        { label: 'Início', href: '#home' },
+        { label: 'Serviços', href: '#skills' },
+        { label: 'Processo', href: '#process' },
+        { label: 'Contato', href: '#contact' },
+      ]
+    : [
+        { label: 'Home', href: '#home' },
+        { label: 'Services', href: '#skills' },
+        { label: 'Process', href: '#process' },
+        { label: 'Contact', href: '#contact' },
+      ];
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, []);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   // Smart scroll: for pinned sections, scroll to the point where
   // the interaction actually begins (not the raw element top)
@@ -65,7 +94,7 @@ export const Navigation = () => {
       className="absolute top-0 left-0 w-full z-50 bg-transparent"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -76,133 +105,152 @@ export const Navigation = () => {
               <a
                 href="#home"
                 onClick={(e) => { e.preventDefault(); scrollToSection('#home'); }}
-                className="text-sm font-mono tracking-[0.3em] text-white/60 hover:text-white/90 uppercase transition-colors duration-300"
+                className="text-sm font-mono tracking-[0.3em] text-white/70 hover:text-white/90 uppercase transition-colors duration-300"
               >
                 Maruk
               </a>
             ) : (
               <Link
                 to="/"
-                className="text-sm font-mono tracking-[0.3em] text-white/60 hover:text-white/90 uppercase transition-colors duration-300"
+                className="text-sm font-mono tracking-[0.3em] text-white/70 hover:text-white/90 uppercase transition-colors duration-300"
               >
                 Maruk
               </Link>
             )}
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {isHome && navItems.map((item, i) => (
-              <motion.a
-                key={item.label}
-                href={item.href}
-                onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * i + 0.4 }}
-                className="text-[11px] font-mono text-white/35 hover:text-white/80 transition-colors duration-300 uppercase tracking-[0.15em]"
-              >
-                {item.label}
-              </motion.a>
-            ))}
-
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.85 }}
-            >
-              <Link
-                to="/consultoria-informatica"
-                className="text-[11px] font-mono text-cyan-200/70 hover:text-cyan-100 transition-colors duration-300 uppercase tracking-[0.15em]"
-              >
-                Suporte
-              </Link>
-            </motion.div>
-
-            {/* Playground link */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-            >
-              <Link
-                to="/playground"
-                className="text-[11px] font-mono text-white/35 hover:text-white/80 transition-colors duration-300 uppercase tracking-[0.15em]"
-              >
-                Lab
-              </Link>
-            </motion.div>
-
-            {/* Divider */}
-            <div className="w-px h-4 bg-white/10" />
-
-            {/* Language toggle */}
-            <motion.button
-              onClick={toggleLanguage}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1 }}
-              className="flex items-center gap-1.5 text-[10px] font-mono text-white/40 hover:text-white/70 transition-colors duration-300 uppercase tracking-widest"
-            >
-              <Globe size={12} />
-              <span>{language === 'pt' ? 'EN' : 'PT'}</span>
-            </motion.button>
-          </div>
-
-          {/* Mobile */}
-          <div className="md:hidden flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={toggleLanguage}
-              className="text-[10px] font-mono text-white/40 hover:text-white/70 transition-colors uppercase tracking-widest flex items-center gap-1"
+              className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-white/40 transition-colors hover:text-white/70"
             >
               <Globe size={12} />
               {language === 'pt' ? 'EN' : 'PT'}
             </button>
             <button
+              type="button"
+              aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
+              aria-expanded={isOpen}
+              aria-controls="main-navigation-overlay"
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 text-white/50 hover:text-white/80 transition-colors"
+              className="relative z-[120] flex h-11 w-11 items-center justify-center text-white/60 transition-colors hover:text-white"
             >
-              {isOpen ? <X size={20} /> : <Menu size={20} />}
+              {isOpen ? <X size={26} strokeWidth={1.6} /> : <Menu size={28} strokeWidth={1.7} />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="md:hidden overflow-hidden bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/[0.04]"
+            id="main-navigation-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navegação principal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.34, ease: 'easeOut' }}
+            className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050505]/96 px-5 py-20 backdrop-blur-xl"
           >
-            <div className="py-6 px-6 flex flex-col gap-4">
-              {isHome && navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
-                  className="text-sm font-mono text-white/50 hover:text-white/90 transition-colors uppercase tracking-[0.2em] py-2"
+            <button
+              type="button"
+              aria-label="Fechar menu"
+              onClick={() => setIsOpen(false)}
+              className="absolute inset-0"
+            />
+
+            <motion.div
+              aria-hidden="true"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              exit={{ scaleX: 0 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute left-0 top-0 h-px w-full origin-left bg-white/15"
+            />
+            <motion.div
+              aria-hidden="true"
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              exit={{ scaleY: 0 }}
+              transition={{ duration: 0.75, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute right-8 top-0 hidden h-full w-px origin-top bg-white/[0.08] md:block"
+            />
+
+            <div className="relative z-10 flex w-full max-w-5xl flex-col items-center">
+              <motion.p
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.42, delay: 0.08 }}
+                className="mb-7 font-mono text-[10px] uppercase tracking-[0.34em] text-white/35"
+              >
+                Maruk / menu
+              </motion.p>
+
+              <nav className="w-full text-center">
+                {isHome && navItems.map((item, index) => (
+                  <motion.a
+                    key={item.label}
+                    href={item.href}
+                    initial={{ opacity: 0, y: 34 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -22 }}
+                    transition={{
+                      duration: 0.48,
+                      delay: index * 0.07 + 0.12,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    onClick={(e) => { e.preventDefault(); scrollToSection(item.href); }}
+                    className="group flex w-full items-baseline justify-center gap-4 border-b border-white/[0.07] py-4 text-center md:gap-7 md:py-5"
+                  >
+                    <span className="text-[0.62rem] font-medium tracking-[0.2em] text-[#00ffcc]/55">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-4xl font-light text-white transition-[color,transform] duration-300 group-hover:translate-x-2 group-hover:text-[#00ffcc] sm:text-5xl md:text-7xl">
+                      {item.label}
+                    </span>
+                  </motion.a>
+                ))}
+
+                <motion.div
+                  initial={{ opacity: 0, y: 34 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -22 }}
+                  transition={{
+                    duration: 0.48,
+                    delay: (isHome ? navItems.length : 0) * 0.07 + 0.12,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                 >
-                  {item.label}
-                </a>
-              ))}
-              <Link
-                to="/consultoria-informatica"
-                onClick={() => setIsOpen(false)}
-                className="text-sm font-mono text-cyan-200/70 hover:text-cyan-100 transition-colors uppercase tracking-[0.2em] py-2"
+                  <Link
+                    to="/playground"
+                    onClick={() => setIsOpen(false)}
+                    className="group flex w-full items-baseline justify-center gap-4 py-4 text-center md:gap-7 md:py-5"
+                  >
+                    <span className="text-[0.62rem] font-medium tracking-[0.2em] text-[#00ffcc]/55">
+                      {String((isHome ? navItems.length : 0) + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-4xl font-light text-white transition-[color,transform] duration-300 group-hover:translate-x-2 group-hover:text-[#00ffcc] sm:text-5xl md:text-7xl">
+                      Lab
+                    </span>
+                  </Link>
+                </motion.div>
+              </nav>
+
+              <motion.a
+                href="#contact"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.45, delay: 0.42 }}
+                onClick={(e) => { e.preventDefault(); scrollToSection('#contact'); }}
+                className="mt-8 inline-flex items-center gap-3 border-b border-[#00ffcc]/45 pb-2 text-sm font-medium text-white transition-colors hover:text-[#00ffcc] md:mt-10 md:text-base"
               >
-                Suporte
-              </Link>
-              <Link
-                to="/playground"
-                onClick={() => setIsOpen(false)}
-                className="text-sm font-mono text-white/50 hover:text-white/90 transition-colors uppercase tracking-[0.2em] py-2"
-              >
-                Lab
-              </Link>
+                {language === 'pt' ? 'Começar um projeto' : 'Start a project'}
+                <ArrowRight size={17} strokeWidth={1.7} />
+              </motion.a>
             </div>
           </motion.div>
         )}

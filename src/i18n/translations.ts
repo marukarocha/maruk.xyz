@@ -4,14 +4,14 @@ export const pt = {
     description: "Desenvolvimento de aplicações, sites e sistemas sob medida. Mais de 20 anos trabalhando com tecnologia, design e criação digital."
   },
   hero: {
-    smallLine: "Developer & Designer · +20 anos de experiência",
-    title: "Sistemas. Interfaces. Movimento.",
+    smallLine: "Desenvolvimento web · produtos digitais · 3D interativo",
+    title: "Web clara para ideias complexas.",
     subtitle: "",
-    description: "Design, sistemas e experiências interativas na fronteira da web.",
-    techStack: "React · Three.js · GSAP · Spatial UI · Arquitetura · UI · 3D",
+    description: "Crio sites, sistemas e experiências visuais com foco em leitura, performance e presença digital.",
+    techStack: "React · Three.js · GSAP · UI · Arquitetura · 3D",
     available: "Disponível para projetos",
-    cta1: "Explorar projetos",
-    cta2: "Contato",
+    cta1: "Ver serviços",
+    cta2: "Falar sobre projeto",
     stats: [
       { value: "20+", label: "Anos" },
       { value: "50+", label: "Projetos" },
@@ -137,6 +137,71 @@ export const pt = {
       }
     ]
   },
+  playground: {
+    layout: {
+      backToPortfolio: "portfólio",
+      brand: "labs",
+      status: "experimental"
+    },
+    index: {
+      kicker: "// lab",
+      title: "Playground",
+      description: "Experimentos, protótipos e ideias visuais. Um espaço para explorar tecnologias e conceitos sem compromisso com perfeição.",
+      comingSoon: "Em breve",
+      webListKicker: "// web",
+      webListTitle: "Experiências web",
+      webListDescription: "Projetos de turismo e e-bike ficam fora do carrossel principal e aparecem aqui em uma leitura mais direta.",
+      slideLabel: "Interação",
+      previous: "Anterior",
+      next: "Próxima"
+    },
+    statusLabels: {
+      live: "Ativo",
+      wip: "WIP",
+      concept: "Conceito"
+    },
+    viewer: {
+      loading: "abrindo experimento",
+      crashTitle: "Experimento com falha",
+      crashDescription: "O WebGL pode ter ficado sem memória. Tente recarregar.",
+      reload: "Recarregar",
+      backToPlayground: "Voltar ao Playground"
+    },
+    experiments: {
+      "experience-studio": {
+        title: "Lagoa E-Bikes",
+        description: "Pagina comercial para aluguel, oficina e venda de bicicletas eletricas na Lagoa da Conceicao."
+      },
+      eldonita: {
+        title: "Eldonita Inteligência",
+        description: "Protótipo de landing page para inteligência aplicada, leitura de dados, comunicação estratégica e decisão."
+      },
+      drinks: {
+        title: "Energy Drinks",
+        description: "Carrossel 3D interativo com 9 energéticos, rotação suave por objeto, materiais de silhueta, câmera/luz/DoF em tempo real, parallax e inspeção de rótulo."
+      },
+      "animated-scene": {
+        title: "Cena Animada",
+        description: "Personagem 3D com timeline interativa, play/pause/rewind, troca de animações com crossfade, parallax, ajustes de câmera/luz/DoF e direção de cena."
+      },
+      "pdv-showcase": {
+        title: "PDV Spatial",
+        description: "Cena 3D de ponto de venda com hotspots clicáveis, HUD lateral, tour automático e transições de câmera para apresentação guiada do ambiente."
+      },
+      "bike-cargo": {
+        title: "Bike Cargo",
+        description: "Experiência de produto para bike cargo com viewer 3D, tomadas guiadas e narrativa editorial para apresentar forma, carga e presença visual."
+      },
+      "tshirt-lab": {
+        title: "T-Shirt Custom",
+        description: "Customizer 3D de camiseta com troca de cor, estampas em tempo real e ajustes visuais em uma interface focada em produto."
+      },
+      "tourism-guide": {
+        title: "Gabe Turismo",
+        description: "Landing page de turismo para Morro de Sao Paulo com roteiros, frota, diferenciais e contato direto no WhatsApp."
+      }
+    }
+  },
   footer: {
     rights: "Todos os direitos reservados.",
     nav: {
@@ -155,14 +220,14 @@ export const en = {
     description: "Front-end development that sets standards. I use 3D, motion and creative direction to build robust web applications."
   },
   hero: {
-    title: "Web Apps, 3D & Creative Direction",
-    smallLine: "Independent Developer & Designer · 20+ years",
+    title: "Clear web for complex ideas.",
+    smallLine: "Web development · digital products · interactive 3D",
     subtitle: "",
-    description: "Front-end development that sets standards. I use 3D, motion and creative direction to build robust and visually striking web applications.",
-    techStack: "React · WordPress · Flutter · UI · 3D · Integrations",
+    description: "I build websites, systems and visual experiences focused on clarity, performance and digital presence.",
+    techStack: "React · Three.js · GSAP · UI · Architecture · 3D",
     available: "Available for projects",
-    cta1: "View Web Solutions",
-    cta2: "3D/Tech Consulting",
+    cta1: "View services",
+    cta2: "Discuss a project",
     stats: [
       { value: "20+", label: "Years" },
       { value: "50+", label: "Projects" },
@@ -297,6 +362,71 @@ export const en = {
         description: "Your digital product goes live. We ensure a smooth deployment and provide ongoing support for growth."
       }
     ]
+  },
+  playground: {
+    layout: {
+      backToPortfolio: "portfolio",
+      brand: "labs",
+      status: "experimental"
+    },
+    index: {
+      kicker: "// lab",
+      title: "Playground",
+      description: "Experiments, prototypes, and visual ideas. A space to explore technologies and concepts without the pressure of perfection.",
+      comingSoon: "Coming soon",
+      webListKicker: "// web",
+      webListTitle: "Web experiences",
+      webListDescription: "Tourism and e-bike projects sit outside the main carousel and appear here in a simpler list.",
+      slideLabel: "Interaction",
+      previous: "Previous",
+      next: "Next"
+    },
+    statusLabels: {
+      live: "Live",
+      wip: "WIP",
+      concept: "Concept"
+    },
+    viewer: {
+      loading: "opening experiment",
+      crashTitle: "Experiment crashed",
+      crashDescription: "WebGL may have run out of memory. Try reloading.",
+      reload: "Reload",
+      backToPlayground: "Back to Playground"
+    },
+    experiments: {
+      "experience-studio": {
+        title: "Lagoa E-Bikes",
+        description: "Commercial page for electric bike rental, workshop services, and sales in Lagoa da Conceicao."
+      },
+      eldonita: {
+        title: "Eldonita Intelligence",
+        description: "Landing page prototype for applied intelligence, data reading, strategic communication, and decision-making."
+      },
+      drinks: {
+        title: "Energy Drinks",
+        description: "Interactive 3D carousel with 9 cans, smooth per-object rotation, silhouette materials, real-time camera/light/DoF controls, parallax, and label inspection."
+      },
+      "animated-scene": {
+        title: "Animated Scene",
+        description: "3D character scene with interactive timeline, play/pause/rewind, animation clip switching with crossfade, parallax, and live camera/light/DoF controls."
+      },
+      "pdv-showcase": {
+        title: "PDV Spatial",
+        description: "3D point-of-sale environment with clickable hotspots, side HUD, auto tour, and guided camera transitions through the scene."
+      },
+      "bike-cargo": {
+        title: "Bike Cargo",
+        description: "Product-focused bike cargo experience with a 3D viewer, guided shots, and editorial UI to present form, load capacity, and visual presence."
+      },
+      "tshirt-lab": {
+        title: "T-Shirt Custom",
+        description: "3D t-shirt customizer with real-time color and stamp switching in a clean, product-oriented interface."
+      },
+      "tourism-guide": {
+        title: "Gabe Tourism",
+        description: "Tourism landing page for Morro de Sao Paulo with routes, fleet details, safety highlights, and direct WhatsApp contact."
+      }
+    }
   },
   footer: {
     rights: "All rights reserved.",

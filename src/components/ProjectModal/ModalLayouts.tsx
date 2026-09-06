@@ -204,11 +204,11 @@ const visualSpaceAssets: VisualAsset[] = [
   { src: assetSrc('/port/3d/intro.mp4'), label: 'intro.mp4', kind: 'video', sizeLabel: '9.1 MB' },
   { src: assetSrc('/port/3d/Character.mp4'), label: 'Character.mp4', kind: 'video', sizeLabel: '2.5 MB' },
   { src: assetSrc('/port/3d/CharacterII.mp4'), label: 'CharacterII.mp4', kind: 'video', sizeLabel: '14.6 MB' },
-  { src: assetSrc('/port/3d/Craby-22.jpg'), label: 'Craby-22.jpg', kind: 'image', sizeLabel: '460 KB', resolution: '3472x1860' },
-  { src: assetSrc('/port/3d/Dragon.jpg'), label: 'Dragon.jpg', kind: 'image', sizeLabel: '48 KB', resolution: '617x617' },
+  { src: assetSrc('/port/3d/Craby-22.webp'), label: 'Craby-22.webp', kind: 'image', sizeLabel: '80 KB', resolution: '3472x1860' },
+  { src: assetSrc('/port/3d/Dragon.webp'), label: 'Dragon.webp', kind: 'image', sizeLabel: '22 KB', resolution: '617x617' },
   { src: assetSrc('/port/3d/Hidromel.webp'), label: 'Hidromel.webp', kind: 'image', sizeLabel: '99 KB', resolution: '1536x1024' },
   { src: assetSrc('/port/3d/coletivo.webp'), label: 'coletivo.webp', kind: 'image', sizeLabel: '75 KB', resolution: '1536x1024' },
-  { src: assetSrc('/port/3d/devconf.png'), label: 'devconf.png', kind: 'image', sizeLabel: '2.2 MB', resolution: '1536x1024' },
+  { src: assetSrc('/port/3d/devconf.webp'), label: 'devconf.webp', kind: 'image', sizeLabel: '109 KB', resolution: '1536x1024' },
   { src: assetSrc('/port/3d/dinofim.webp'), label: 'dinofim.webp', kind: 'image', sizeLabel: '159 KB', resolution: '1536x1024' },
   { src: assetSrc('/port/3d/balão.mp4'), label: 'balão.mp4', kind: 'video', sizeLabel: '12.4 MB' },
   { src: assetSrc('/port/3d/capacete.mp4'), label: 'capacete.mp4', kind: 'video', sizeLabel: '3.1 MB' },
@@ -217,19 +217,19 @@ const visualSpaceAssets: VisualAsset[] = [
   { src: assetSrc('/port/3d/garra.mp4'), label: 'garra.mp4', kind: 'video', sizeLabel: '4.7 MB', resolution: '1280x720' },
   { src: assetSrc('/port/3d/rig olhos.mp4'), label: 'rig olhos.mp4', kind: 'video', sizeLabel: '3.4 MB' },
   { src: assetSrc('/port/3d/Stage1_VP8.webm'), label: 'Stage1_VP8.webm', kind: 'video', sizeLabel: '1.2 MB' },
-  { src: assetSrc('/port/3d/CEnario Valor Carreira2.jpg'), label: 'CEnario Valor Carreira2.jpg', kind: 'image', sizeLabel: '139 KB', resolution: '1280x720' },
-  { src: assetSrc('/port/3d/KOMBI.png'), label: 'KOMBI.png', kind: 'image', sizeLabel: '2.3 MB', resolution: '1080x1920' },
-  { src: assetSrc('/port/3d/Maquete Laundex1.jpg'), label: 'Maquete Laundex1.jpg', kind: 'image', sizeLabel: '994 KB', resolution: '2048x1556' },
-  { src: assetSrc('/port/3d/Maquete Laundex2.jpg'), label: 'Maquete Laundex2.jpg', kind: 'image', sizeLabel: '610 KB', resolution: '1624x920' },
-  { src: assetSrc('/port/3d/Nova linha varejo Ultraprotec.png'), label: 'Nova linha varejo Ultraprotec.png', kind: 'image', sizeLabel: '169 KB', resolution: '1240x522' },
-  { src: assetSrc('/port/3d/boidemamamao.png'), label: 'boidemamamao.png', kind: 'image', sizeLabel: '1.0 MB', resolution: '2800x2800' },
-  { src: assetSrc('/port/3d/cama_dogs.png'), label: 'cama_dogs.png', kind: 'image', sizeLabel: '491 KB', resolution: '931x931' },
-  { src: assetSrc('/port/3d/dragons.png'), label: 'dragons.png', kind: 'image', sizeLabel: '1.8 MB', resolution: '1080x1920' },
-  { src: assetSrc('/port/3d/maquete1.png'), label: 'maquete1.png', kind: 'image', sizeLabel: '723 KB', resolution: '960x540' },
-  { src: assetSrc('/port/3d/monkey.jpg'), label: 'monkey.jpg', kind: 'image', sizeLabel: '275 KB', resolution: '1816x972' },
-  { src: assetSrc('/port/3d/pdv.jpeg'), label: 'pdv.jpeg', kind: 'image', sizeLabel: '353 KB', resolution: '1415x1000' },
-  { src: assetSrc('/port/3d/pdv.png'), label: 'pdv.png', kind: 'image', sizeLabel: '1.2 MB', resolution: '1344x756' },
-  { src: assetSrc('/port/3d/raul_blend.png'), label: 'raul_blend.png', kind: 'image', sizeLabel: '225 KB', resolution: '1024x583' },
+  { src: assetSrc('/port/3d/CEnario Valor Carreira2.webp'), label: 'CEnario Valor Carreira2.webp', kind: 'image', sizeLabel: '55 KB', resolution: '1280x720' },
+  { src: assetSrc('/port/3d/KOMBI.webp'), label: 'KOMBI.webp', kind: 'image', sizeLabel: '47 KB', resolution: '1080x1920' },
+  { src: assetSrc('/port/3d/Maquete Laundex1.webp'), label: 'Maquete Laundex1.webp', kind: 'image', sizeLabel: '91 KB', resolution: '2048x1556' },
+  { src: assetSrc('/port/3d/Maquete Laundex2.webp'), label: 'Maquete Laundex2.webp', kind: 'image', sizeLabel: '68 KB', resolution: '1624x920' },
+  { src: assetSrc('/port/3d/Nova linha varejo Ultraprotec.webp'), label: 'Nova linha varejo Ultraprotec.webp', kind: 'image', sizeLabel: '71 KB', resolution: '1240x522' },
+  { src: assetSrc('/port/3d/boidemamamao.webp'), label: 'boidemamamao.webp', kind: 'image', sizeLabel: '89 KB', resolution: '2800x2800' },
+  { src: assetSrc('/port/3d/cama_dogs.webp'), label: 'cama_dogs.webp', kind: 'image', sizeLabel: '37 KB', resolution: '931x931' },
+  { src: assetSrc('/port/3d/dragons.webp'), label: 'dragons.webp', kind: 'image', sizeLabel: '111 KB', resolution: '1080x1920' },
+  { src: assetSrc('/port/3d/maquete1.webp'), label: 'maquete1.webp', kind: 'image', sizeLabel: '212 KB', resolution: '960x540' },
+  { src: assetSrc('/port/3d/monkey.webp'), label: 'monkey.webp', kind: 'image', sizeLabel: '168 KB', resolution: '1816x972' },
+  { src: assetSrc('/port/3d/pdv.webp'), label: 'pdv.webp', kind: 'image', sizeLabel: '69 KB', resolution: '1344x756' },
+  { src: assetSrc('/port/3d/pdv2.webp'), label: 'pdv2.webp', kind: 'image', sizeLabel: '59 KB', resolution: '1344x756' },
+  { src: assetSrc('/port/3d/raul_blend.webp'), label: 'raul_blend.webp', kind: 'image', sizeLabel: '22 KB', resolution: '1024x583' },
 ];
 
 function getAssetDimensions(asset: VisualAsset) {
@@ -1242,15 +1242,15 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
 
   if (!isThreeDModule) {
     return (
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-24 pt-0 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl overflow-x-hidden px-4 pb-24 pt-0 sm:px-6 lg:px-8">
         <motion.div className="relative z-10" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.35 }}>
           {motionVideos.length > 0 && (
             <section ref={motionSectionRef} className="relative mb-28" style={{ height: `${motionSectionHeight}px` }}>
-              <div className="sticky top-0 flex h-screen items-center">
+              <div className="sticky top-0 flex h-screen items-center [@media(max-height:760px)]:items-start [@media(max-height:760px)]:pt-8">
                 <div className="w-full">
-                  <div className="grid items-end gap-6 lg:grid-cols-[minmax(0,1.72fr)_minmax(300px,0.62fr)] lg:gap-0">
+                  <div className="grid items-end gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.62fr)] lg:gap-0 xl:grid-cols-[minmax(0,1.72fr)_minmax(300px,0.62fr)] [@media(max-height:760px)]:lg:grid-cols-[minmax(0,690px)_minmax(280px,360px)] [@media(max-height:760px)]:lg:items-start [@media(max-height:760px)]:lg:justify-center">
                     <div className="relative overflow-visible">
-                      <div className="relative aspect-video w-full overflow-hidden bg-black shadow-[0_36px_90px_rgba(0,0,0,0.45)]">
+                      <div className="relative aspect-video w-full overflow-hidden bg-black shadow-[0_36px_90px_rgba(0,0,0,0.45)] [@media(max-height:760px)]:lg:max-w-[690px]">
                         {activeMotionVideo ? (
                           isHostedVideoAsset(activeMotionVideo.url) ? (
                             <video
@@ -1283,30 +1283,30 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
                     </div>
 
                     <motion.aside
-                      className="relative z-10 max-w-md bg-white/6 p-6 backdrop-blur-xl lg:-mb-10 lg:-ml-12 lg:p-7"
+                      className="relative z-10 max-w-md bg-white/6 p-5 backdrop-blur-xl lg:-mb-6 lg:-ml-10 lg:p-6 xl:-mb-10 xl:-ml-12 xl:p-7 [@media(max-height:760px)]:max-w-sm [@media(max-height:760px)]:p-5 [@media(max-height:760px)]:lg:-mt-8 [@media(max-height:760px)]:lg:-ml-8 [@media(max-height:760px)]:xl:-mt-8"
                       initial={{ opacity: 0, y: 18 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.12, duration: 0.4 }}
                     >
                       <span className="text-[11px] font-mono uppercase tracking-[0.28em] text-white/45">Manifesto</span>
-                      <h2 className="mt-5 text-4xl font-semibold uppercase leading-[0.92] tracking-[-0.05em] text-[#f2f5f7] sm:text-5xl lg:text-6xl">
+                      <h2 className="mt-5 text-4xl font-semibold uppercase leading-[0.92] tracking-[-0.05em] text-[#f2f5f7] sm:text-5xl lg:text-5xl xl:text-6xl [@media(max-height:760px)]:mt-3 [@media(max-height:760px)]:text-4xl">
                         Movimento com intencao.
                       </h2>
-                      <p className="mt-6 max-w-sm text-base leading-relaxed text-[#c0c5cc]">
+                      <p className="mt-6 max-w-sm text-base leading-relaxed text-[#c0c5cc] [@media(max-height:760px)]:mt-4 [@media(max-height:760px)]:text-sm">
                         Cada frame e construido para guiar leitura, emocao e memoracao da mensagem.
                       </p>
-                      <p className="mt-4 max-w-sm text-base leading-relaxed text-[#8d949d]">
+                      <p className="mt-4 max-w-sm text-base leading-relaxed text-[#8d949d] [@media(max-height:760px)]:mt-3 [@media(max-height:760px)]:text-sm">
                         Do conceito ao acabamento: ritmo, direcao de arte e consistencia de marca em toda a entrega.
                       </p>
-                      <p className="mt-8 max-w-sm text-[11px] font-mono uppercase leading-relaxed tracking-[0.24em] text-white/38">
+                      <p className="mt-8 max-w-sm text-[11px] font-mono uppercase leading-relaxed tracking-[0.24em] text-white/38 [@media(max-height:760px)]:mt-5 [@media(max-height:760px)]:text-[10px] [@media(max-height:760px)]:leading-snug">
                         {techStack.join(' · ')}
                       </p>
                     </motion.aside>
                   </div>
 
                   {motionVideos.length > 1 && (
-                    <div className="relative left-1/2 z-20 mt-2 w-screen -translate-x-1/2 sm:mt-3 lg:mt-4">
-                      <div className="origin-center lg:-rotate-[1.75deg]">
+                    <div className="relative left-1/2 z-20 mt-2 w-screen max-w-[100vw] -translate-x-1/2 sm:mt-3 lg:mt-4 [@media(max-height:760px)]:mt-2">
+                      <div className="origin-center lg:-rotate-[1.75deg] [@media(max-height:760px)]:lg:-rotate-[1deg]">
                         <div
                           ref={stripViewportRef}
                           className="overflow-hidden border-y border-white/10 bg-black/30 shadow-[0_24px_80px_rgba(0,0,0,0.25)] backdrop-blur-sm"
@@ -1319,7 +1319,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
                                 <button
                                   key={`${video.title}-${index}-top`}
                                   onClick={() => selectMotionVideo(video.signature)}
-                                  className={`group relative h-[112px] w-[208px] shrink-0 overflow-hidden border-r border-white/12 sm:h-[136px] sm:w-[272px] lg:h-[156px] lg:w-[332px] ${
+                                  className={`group relative h-[112px] w-[208px] shrink-0 overflow-hidden border-r border-white/12 sm:h-[136px] sm:w-[272px] lg:h-[132px] lg:w-[286px] xl:h-[156px] xl:w-[332px] [@media(max-height:760px)]:lg:h-[86px] [@media(max-height:760px)]:lg:w-[230px] ${
                                     isActive ? 'border-cyan-100/55' : 'hover:border-cyan-100/30'
                                   }`}
                                   aria-label={`Exibir ${video.title}`}
@@ -1341,15 +1341,15 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
                                   <div className="absolute inset-0 z-20 bg-gradient-to-t from-[#02070b]/94 via-[#0e3144]/62 to-[#17485f]/36 opacity-100 transition-opacity duration-300 group-hover:opacity-88" />
                                   <div className="absolute inset-0 z-30 flex items-center justify-center">
                                     <span
-                                      className={`inline-flex h-12 w-12 items-center justify-center rounded-full border shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all duration-300 group-hover:scale-105 group-hover:bg-black/34 ${
+                                      className={`inline-flex h-12 w-12 items-center justify-center rounded-full border shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all duration-300 group-hover:scale-105 group-hover:bg-black/34 [@media(max-height:760px)]:h-7 [@media(max-height:760px)]:w-7 ${
                                         isActive ? 'border-cyan-100/85 bg-cyan-100/24 text-cyan-50' : 'border-white/55 bg-black/42 text-white'
                                       }`}
                                     >
                                       <Play size={17} className="ml-0.5" />
                                     </span>
                                   </div>
-                                  <div className="absolute bottom-3 left-4 right-4 z-30 text-left">
-                                    <p className="truncate text-sm font-semibold uppercase tracking-[0.12em] text-white">{video.title}</p>
+                                  <div className="absolute bottom-3 left-4 right-4 z-30 text-left [@media(max-height:760px)]:bottom-2 [@media(max-height:760px)]:left-3 [@media(max-height:760px)]:right-3">
+                                    <p className="truncate text-sm font-semibold uppercase tracking-[0.12em] text-white [@media(max-height:760px)]:text-[10px]">{video.title}</p>
                                   </div>
                                 </button>
                               );
@@ -1368,7 +1368,7 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
                                 <button
                                   key={`${video.title}-${index}-bottom`}
                                   onClick={() => selectMotionVideo(video.signature)}
-                                  className={`group relative h-[112px] w-[208px] shrink-0 overflow-hidden border-r border-white/12 sm:h-[136px] sm:w-[272px] lg:h-[156px] lg:w-[332px] ${
+                                  className={`group relative h-[112px] w-[208px] shrink-0 overflow-hidden border-r border-white/12 sm:h-[136px] sm:w-[272px] lg:h-[132px] lg:w-[286px] xl:h-[156px] xl:w-[332px] [@media(max-height:760px)]:lg:h-[86px] [@media(max-height:760px)]:lg:w-[230px] ${
                                     isActive ? 'border-cyan-100/55' : 'hover:border-cyan-100/30'
                                   }`}
                                   aria-label={`Exibir ${video.title}`}
@@ -1390,15 +1390,15 @@ export function MotionLayout({ project, scrollYProgress, onClose }: ModalLayoutP
                                   <div className="absolute inset-0 z-20 bg-gradient-to-t from-[#02070b]/94 via-[#0e3144]/62 to-[#17485f]/36 opacity-100 transition-opacity duration-300 group-hover:opacity-88" />
                                   <div className="absolute inset-0 z-30 flex items-center justify-center">
                                     <span
-                                      className={`inline-flex h-12 w-12 items-center justify-center rounded-full border shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all duration-300 group-hover:scale-105 group-hover:bg-black/34 ${
+                                      className={`inline-flex h-12 w-12 items-center justify-center rounded-full border shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all duration-300 group-hover:scale-105 group-hover:bg-black/34 [@media(max-height:760px)]:h-7 [@media(max-height:760px)]:w-7 ${
                                         isActive ? 'border-cyan-100/85 bg-cyan-100/24 text-cyan-50' : 'border-white/55 bg-black/42 text-white'
                                       }`}
                                     >
                                       <Play size={17} className="ml-0.5" />
                                     </span>
                                   </div>
-                                  <div className="absolute bottom-3 left-4 right-4 z-30 text-left">
-                                    <p className="truncate text-sm font-semibold uppercase tracking-[0.12em] text-white">{video.title}</p>
+                                  <div className="absolute bottom-3 left-4 right-4 z-30 text-left [@media(max-height:760px)]:bottom-2 [@media(max-height:760px)]:left-3 [@media(max-height:760px)]:right-3">
+                                    <p className="truncate text-sm font-semibold uppercase tracking-[0.12em] text-white [@media(max-height:760px)]:text-[10px]">{video.title}</p>
                                   </div>
                                 </button>
                               );

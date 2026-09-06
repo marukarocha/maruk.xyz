@@ -150,6 +150,15 @@ export const Loader = () => {
       return () => clearTimeout(timeout);
   }, [progress, active, isVisible]);
 
+  // Absolute cap: the homepage should never be blocked by a slow 3D asset.
+  useEffect(() => {
+      const timeout = setTimeout(() => {
+          setPhase('done');
+          setIsVisible(false);
+      }, 6500);
+      return () => clearTimeout(timeout);
+  }, []);
+
   if (!isVisible) return null;
 
   return (

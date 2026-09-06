@@ -13,7 +13,7 @@ interface HeroShellProps {
 export const HeroShell = ({ children }: HeroShellProps) => (
   <section
     id="home"
-    className="min-h-screen flex items-center justify-center relative overflow-hidden bg-transparent"
+    className="min-h-[92svh] flex items-center justify-center relative overflow-hidden bg-transparent"
   >
     <Navigation />
     <HeroBackgroundDarkLiquid />

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ORANGE_CARGO_LOGO_URL } from './config';
 
 type BikeCargoModule = typeof import('./index');
@@ -141,6 +141,9 @@ export function BikeCargoEntry() {
   const [bootReady, setBootReady] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [Component, setComponent] = useState<BikeCargoComponent | null>(null);
+  const handleSceneReady = useCallback(() => {
+    setSceneReady(true);
+  }, []);
 
   const categoriesLabel = useMemo(
     () => formatBootCategories(Array.from(new Set(BIKE_CARGO_BOOT_ASSETS.map((asset) => asset.category)))),
@@ -245,7 +248,7 @@ export function BikeCargoEntry() {
             phase === 'loading' ? 'opacity-0' : 'opacity-100'
           }`}
         >
-          <Component externalLoader onSceneReady={() => setSceneReady(true)} />
+          <Component externalLoader onSceneReady={handleSceneReady} />
         </div>
       ) : null}
       {phase !== 'ready' && (

@@ -90,6 +90,8 @@ const BIKE_BOOT_ASSET_URLS = Array.from(
     BIKE_GALLERY_ENDCAP.src,
   ]),
 );
+let bikeCargoInitialOverviewPlayed = false;
+let bikeCargoInitialOverviewResetTimer: number | null = null;
 
 function tuneBikeSurfaceMaterial(material: THREE.Material, isDark: boolean) {
   if (!(material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshPhysicalMaterial)) return;
@@ -180,6 +182,7 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
   const modelRotationTweenRef = useRef<gsap.core.Tween | null>(null);
   const cargoBoxesRef = useRef<THREE.Object3D[]>([]);
   const cargoBoxesTimelineRef = useRef<gsap.core.Timeline | null>(null);
+  const cargoBoxesStageSyncReadyRef = useRef(false);
   const cargoDogRef = useRef<THREE.Group | null>(null);
   const cargoDogMixerRef = useRef<THREE.AnimationMixer | null>(null);
   const cargoDogSeatActionRef = useRef<THREE.AnimationAction | null>(null);
@@ -235,6 +238,20 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
   const [cursorPressed, setCursorPressed] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [rearSequenceProgress, setRearSequenceProgress] = useState(0);
+
+  useEffect(() => {
+    if (bikeCargoInitialOverviewResetTimer !== null) {
+      window.clearTimeout(bikeCargoInitialOverviewResetTimer);
+      bikeCargoInitialOverviewResetTimer = null;
+    }
+
+    return () => {
+      bikeCargoInitialOverviewResetTimer = window.setTimeout(() => {
+        bikeCargoInitialOverviewPlayed = false;
+        bikeCargoInitialOverviewResetTimer = null;
+      }, 250);
+    };
+  }, []);
 
   const setRearSequenceProgressValue = useCallback((value: number) => {
     const clamped = Math.max(0, Math.min(1, value));
@@ -438,6 +455,22 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
 
   const setCargoBoxesVisible = useCallback((visible: boolean) => {
     cargoBoxesRef.current.forEach((box) => {
+      box.visible = visible;
+    });
+  }, []);
+
+  const resetCargoBoxesToBaseState = useCallback((visible: boolean) => {
+    cargoBoxesTimelineRef.current?.kill();
+    cargoBoxesTimelineRef.current = null;
+
+    cargoBoxesRef.current.forEach((box) => {
+      const targetPosition = box.userData.cargoTargetPosition as THREE.Vector3 | undefined;
+      const targetRotation = box.userData.cargoTargetRotation as THREE.Euler | undefined;
+      const baseScale = box.userData.cargoBaseScale as THREE.Vector3 | undefined;
+
+      if (targetPosition) box.position.copy(targetPosition);
+      if (targetRotation) box.rotation.copy(targetRotation);
+      if (baseScale) box.scale.copy(baseScale);
       box.visible = visible;
     });
   }, []);
@@ -1181,6 +1214,9 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
 
   useEffect(() => {
     activeStageIdRef.current = activeStageId;
+    if (cargoBoxesStageSyncReadyRef.current) {
+      animateCargoBoxes(activeStageId === 'cargo');
+    }
     if (activeStageId === FINAL_STAGE_ID) {
       loadCargoDog();
     }
@@ -1189,7 +1225,7 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
     syncFrameIsolation(activeStageId);
     syncSizeWireframe(activeStageId);
     syncUrbanAmbience();
-  }, [activeStageId, loadCargoDog, syncCargoDog, syncFrameIsolation, syncLoopStageAnimation, syncSizeWireframe, syncUrbanAmbience]);
+  }, [activeStageId, animateCargoBoxes, loadCargoDog, syncCargoDog, syncFrameIsolation, syncLoopStageAnimation, syncSizeWireframe, syncUrbanAmbience]);
 
   useEffect(() => {
     const onWheel = (event: WheelEvent) => {
@@ -1723,7 +1759,12 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
           box.userData.cargoTargetPosition = box.position.clone();
           box.userData.cargoTargetRotation = box.rotation.clone();
         });
-        animateCargoBoxes(activeStageIdRef.current === 'cargo');
+        cargoBoxesStageSyncReadyRef.current = false;
+        resetCargoBoxesToBaseState(false);
+        cargoBoxesStageSyncReadyRef.current = true;
+        if (activeStageIdRef.current === 'cargo') {
+          animateCargoBoxes(true);
+        }
 
         scene.add(model);
 
@@ -1758,7 +1799,17 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
         } else {
           markBootAssetLoaded(BIKE_MODEL_URL);
         }
-        animateCamera(BIKE_STAGES[0].camera);
+        const overviewCamera = BIKE_STAGES[0].camera;
+        if (bikeCargoInitialOverviewPlayed) {
+          camera.position.set(...overviewCamera.position);
+          controls.target.set(...overviewCamera.target);
+          camera.fov = overviewCamera.fov;
+          camera.updateProjectionMatrix();
+          controls.update();
+        } else {
+          bikeCargoInitialOverviewPlayed = true;
+          animateCamera(overviewCamera);
+        }
       },
       undefined,
       () => {
@@ -1996,6 +2047,7 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
       loopActionStopRef.current = null;
       modelRotationTweenRef.current = null;
       cargoBoxesTimelineRef.current = null;
+      cargoBoxesStageSyncReadyRef.current = false;
       cargoDogTweenRef.current = null;
       cargoBoxesRef.current = [];
       cargoDogRef.current = null;
@@ -2018,7 +2070,7 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
         container.removeChild(renderer.domElement);
       }
     };
-  }, [animateCamera, animateCargoBoxes, externalLoader, markBootAssetLoaded, onSceneReady, syncFrameIsolation, syncLoopStageAnimation, syncSizeWireframe, theme]);
+  }, [animateCamera, animateCargoBoxes, externalLoader, markBootAssetLoaded, onSceneReady, resetCargoBoxesToBaseState, syncFrameIsolation, syncLoopStageAnimation, syncSizeWireframe, theme]);
 
   const activeStage = BIKE_STAGES.find((item) => item.id === activeStageId) ?? BIKE_STAGES[0];
   const isDark = theme === 'dark';

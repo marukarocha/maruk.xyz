@@ -1,8 +1,5 @@
 import type { ComponentType } from 'react';
 import { HeroClassic }  from './variants/HeroClassic';
-import { HeroStagger }  from './variants/HeroStagger';
-import { HeroSplit }    from './variants/HeroSplit';
-import { HeroTerminal } from './variants/HeroTerminal';
 
 /**
  * All available Hero variants.
@@ -10,16 +7,13 @@ import { HeroTerminal } from './variants/HeroTerminal';
  */
 const VARIANTS: ComponentType[] = [
   HeroClassic,
-  HeroStagger,
-  HeroSplit,
-  HeroTerminal,
 ];
 
 /**
- * Pick once at module load time — stable for the whole page session,
- * changes on every hard refresh / new tab.
+ * Keep the first impression consistent. The experimental variants still live
+ * in this folder, but the public homepage should not change on refresh.
  */
-const picked = Math.floor(Math.random() * VARIANTS.length);
+const picked = 0;
 
 export const Hero = () => {
   const Variant = VARIANTS[picked];

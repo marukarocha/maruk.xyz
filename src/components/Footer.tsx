@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowUp } from 'lucide-react';
 import { useLanguage } from '../i18n/useLanguage';
-import { Link } from 'react-router-dom';
 
 export const Footer = () => {
   const scrollToTop = () => {
@@ -64,12 +63,6 @@ export const Footer = () => {
                 {item.label}
               </a>
             ))}
-            <Link
-              to="/consultoria-informatica"
-              className="text-cyan-200/60 hover:text-cyan-100 text-xs font-mono uppercase tracking-[0.15em] transition-colors duration-300"
-            >
-              Suporte
-            </Link>
           </motion.nav>
 
           {/* Divider */}

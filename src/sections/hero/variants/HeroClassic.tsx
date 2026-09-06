@@ -1,7 +1,6 @@
 import { useRef, useLayoutEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import { HeroShell } from '../HeroShell';
-import Logo from '/images/logo.svg';
 import gsap from 'gsap';
 import { useLanguage } from '../../../i18n/useLanguage';
 
@@ -11,9 +10,8 @@ import { useLanguage } from '../../../i18n/useLanguage';
  */
 export const HeroClassic = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const logoRef      = useRef<HTMLImageElement>(null);
   const titleRef     = useRef<HTMLHeadingElement>(null);
-  const techRef      = useRef<HTMLDivElement>(null);
+  const roleRef      = useRef<HTMLParagraphElement>(null);
   const descRef      = useRef<HTMLParagraphElement>(null);
   const ctaRef       = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLButtonElement>(null);
@@ -24,21 +22,18 @@ export const HeroClassic = () => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-      tl.fromTo(logoRef.current,
-          { opacity: 0, y: 30, scale: 0.9 },
-          { opacity: 1, y: 0, scale: 1, duration: 1.2 })
+      tl.fromTo(roleRef.current,
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.65 })
         .fromTo(titleRef.current,
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 1 }, '-=0.6')
+          { opacity: 0, y: 24 },
+          { opacity: 1, y: 0, duration: 0.95 }, '-=0.45')
         .fromTo(descRef.current,
           { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 1 }, '-=0.8')
-        .fromTo(techRef.current,
-          { opacity: 0, y: 15 },
-          { opacity: 1, y: 0, duration: 0.8 }, '-=0.6')
+          { opacity: 1, y: 0, duration: 0.8 }, '-=0.55')
         .fromTo(ctaRef.current,
           { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 0.8 }, '-=0.6')
+          { opacity: 1, y: 0, duration: 0.75 }, '-=0.45')
         .fromTo(scrollRef.current,
           { opacity: 0 },
           { opacity: 1, duration: 1 }, '-=0.4');
@@ -51,24 +46,20 @@ export const HeroClassic = () => {
     <HeroShell>
       <div
         ref={containerRef}
-        className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10"
+        className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
       >
-        <div className="max-w-4xl mx-auto flex flex-col items-center">
-
-          {/* Logo */}
-          <div className="mb-10">
-            <img
-              ref={logoRef}
-              src={Logo}
-              alt="Logo"
-              className="w-[234px] md:w-[286px] opacity-0 invert brightness-0"
-            />
-          </div>
+        <div className="mx-auto flex max-w-5xl flex-col items-center pt-24 pb-20 text-center md:pt-28">
+          <p
+            ref={roleRef}
+            className="mb-5 max-w-[19rem] text-[10px] font-mono uppercase leading-loose tracking-[0.22em] text-white/45 opacity-0 sm:max-w-2xl sm:text-[11px] sm:tracking-[0.28em]"
+          >
+            {t.hero.smallLine}
+          </p>
 
           {/* Title */}
           <h1
             ref={titleRef}
-            className="text-4xl md:text-6xl font-bold tracking-tight text-[#ededed] mb-6 opacity-0 max-w-3xl"
+            className="mb-6 max-w-[22rem] text-[2.65rem] font-semibold leading-[1.04] tracking-tight text-[#ededed] opacity-0 sm:max-w-4xl sm:text-6xl sm:leading-[0.98] md:text-7xl"
           >
             {t.hero.title}
           </h1>
@@ -76,22 +67,17 @@ export const HeroClassic = () => {
           {/* Description */}
           <p
             ref={descRef}
-            className="text-lg md:text-xl text-[#a1a1aa] max-w-2xl mx-auto mb-8 leading-relaxed opacity-0 font-light"
+            className="mx-auto mb-8 max-w-[21rem] text-base font-light leading-relaxed text-[#a1a1aa] opacity-0 sm:max-w-2xl md:text-xl"
           >
             {t.hero.description}
           </p>
 
-          {/* Tech stack */}
-          <div
-            ref={techRef}
-            className="text-xs md:text-sm font-mono text-[#555] mb-12 uppercase tracking-wide opacity-0"
-          >
-            {t.hero.techStack}
-          </div>
-
           {/* CTA Buttons */}
-          <div ref={ctaRef} className="flex flex-col sm:flex-row gap-6 justify-center mb-16 opacity-0">
-            <a href="#about"   className="btn-primary">{t.hero.cta1}</a>
+          <div ref={ctaRef} className="flex flex-col justify-center gap-3 opacity-0 sm:flex-row">
+            <a href="#skills" className="btn-primary gap-2">
+              {t.hero.cta1}
+              <ArrowRight size={16} strokeWidth={1.8} />
+            </a>
             <a href="#contact" className="btn-secondary">{t.hero.cta2}</a>
           </div>
         </div>
@@ -101,7 +87,7 @@ export const HeroClassic = () => {
           ref={scrollRef}
           onClick={() => document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })}
           aria-label="Scroll to About section"
-          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-[#444] hover:text-[#ededed] transition-colors duration-300 opacity-0"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/25 opacity-0 transition-colors duration-300 hover:text-[#ededed]"
         >
           <ChevronDown size={28} strokeWidth={1} className="animate-bounce" />
         </button>

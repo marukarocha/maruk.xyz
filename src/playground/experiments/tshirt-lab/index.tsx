@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import type { ThreeEvent } from '@react-three/fiber';
 import { ContactShadows, Environment, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import shirtModelUrl from './3d/shirt.gltf?url';
-import shirtBinUrl from './3d/shirt.bin?url';
-import sceneBinUrl from './3d/scene.bin?url';
-import gltfDropTextureUrl from './3d/01_drop.png?url';
+import shirtModelUrl from './3d/Shirt.glb?url';
 
 type StampId = string;
 
@@ -22,15 +20,25 @@ type StampOption = {
   label: string;
   description: string;
   textureUrl?: string;
+  thumbnailUrl?: string;
 };
 
 const SHIRT_COLORS: ColorOption[] = [
-  { id: 'graphite', label: 'Graphite', value: '#30343b' },
-  { id: 'chalk', label: 'Chalk', value: '#f2efe9' },
-  { id: 'sand', label: 'Sand', value: '#cfb89d' },
-  { id: 'cobalt', label: 'Cobalt', value: '#27438f' },
-  { id: 'forest', label: 'Forest', value: '#285245' },
-  { id: 'ember', label: 'Ember', value: '#8b2e2f' },
+  { id: 'white', label: 'White', value: '#f2f4f7' },
+  { id: 'black', label: 'Black', value: '#050608' },
+  { id: 'navy', label: 'Navy', value: '#05084d' },
+  { id: 'orange', label: 'Orange', value: '#ff5b00' },
+  { id: 'green', label: 'Green', value: '#00a514' },
+  { id: 'red', label: 'Red', value: '#ff1010' },
+  { id: 'yellow', label: 'Yellow', value: '#e9ef00' },
+  { id: 'blue', label: 'Blue', value: '#0b5bcf' },
+  { id: 'pink', label: 'Pink', value: '#ec13a3' },
+  { id: 'light-gray', label: 'Light Gray', value: '#b8bcc1' },
+  { id: 'wine', label: 'Wine', value: '#960303' },
+  { id: 'gray', label: 'Gray', value: '#7d838b' },
+  { id: 'cyan', label: 'Cyan', value: '#12b7df' },
+  { id: 'dark-green', label: 'Dark Green', value: '#234f3c' },
+  { id: 'amber', label: 'Amber', value: '#f2a317' },
 ];
 
 const STAMP_COLORS: ColorOption[] = [
@@ -46,6 +54,18 @@ const STAMP_TEXTURES = import.meta.glob('./3d/textures/stamps/*.{png,jpg,jpeg,we
   import: 'default',
   query: '?url',
 }) as Record<string, string>;
+
+const STAMP_THUMBNAILS = import.meta.glob('./3d/textures/stamps/thumbs/*.{png,jpg,jpeg,webp,avif}', {
+  eager: true,
+  import: 'default',
+  query: '?url',
+}) as Record<string, string>;
+
+const STAMP_THUMBNAILS_BY_ID = Object.entries(STAMP_THUMBNAILS).reduce<Record<string, string>>((acc, [path, url]) => {
+  const fileName = path.split('/').pop()?.replace(/\.[^.]+$/, '') ?? '';
+  if (fileName) acc[fileName] = url;
+  return acc;
+}, {});
 
 function formatStampLabel(fileName: string) {
   const noPrefix = fileName.replace(/^\d+[_-]?/, '');
@@ -64,6 +84,7 @@ const GENERATED_STAMP_OPTIONS: StampOption[] = Object.entries(STAMP_TEXTURES)
       label: formatStampLabel(fileName),
       description: `Estampa ${formatStampLabel(fileName)} em PNG transparente.`,
       textureUrl,
+      thumbnailUrl: STAMP_THUMBNAILS_BY_ID[fileName] ?? textureUrl,
     };
   })
   .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' }));
@@ -84,19 +105,27 @@ type StampUvTransform = {
 };
 
 function isVerticalStampId(stampTextureId: string) {
-  return /(?:_|-)vert$/i.test(stampTextureId.trim());
+  const normalized = stampTextureId.trim();
+  return /(?:^|[_-])vert(?:[_-]|$)/i.test(normalized);
+}
+
+function isStampColorCustomizable(stampTextureId: string) {
+  const normalized = stampTextureId.trim().toLowerCase();
+  if (!normalized || normalized === 'none') return false;
+  // Convenção por nome: termos de "color/fixed/nocolor" indicam arte já colorida (cor fixa).
+  return !/(?:nocolor|no_color|fixed|fullcolor|multicolor|colorida|colors?)/i.test(normalized);
 }
 
 function resolveStampUvTransform(stampTextureId: string): StampUvTransform {
   const isVerticalStamp = isVerticalStampId(stampTextureId);
   if (isVerticalStamp) {
-    // Estampa vertical: espelha no eixo X e corrige o "achatamento" no eixo Y.
+    // Estampa vertical: mantém orientação natural (sem flip) e centraliza no recorte vertical.
     const verticalRepeatY = 0.78;
     return {
-      repeatX: -1,
-      repeatY: -verticalRepeatY,
-      offsetX: 1,
-      offsetY: 0.5 + verticalRepeatY * 0.5,
+      repeatX: 1,
+      repeatY: verticalRepeatY,
+      offsetX: 0,
+      offsetY: 0.5 - verticalRepeatY * 0.5,
     };
   }
 
@@ -135,10 +164,25 @@ type BackTextFontOption = {
   weight: number;
 };
 
+type SavedTshirtLabConfig = {
+  version: 1;
+  shirtColor: string;
+  stampColor: string;
+  backTextColor: string;
+  stampId: StampId;
+  shirtModelId: ShirtModelId;
+  shirtSizeId: ShirtSizeId;
+  giftWrapEnabled: boolean;
+  backTextEnabled: boolean;
+  backText: string;
+  backTextFontId: BackTextFontId;
+};
+
 const CHECKOUT_STEPS = ['Produto', 'Extras', 'Checkout', 'Pagamento', 'Finalizacao'] as const;
 const MAX_BACK_TEXT_CHARS = 16;
 const BACK_TEXT_EXTRA_PRICE = 22;
 const GIFT_WRAP_PRICE = 18;
+const TSHIRT_LAB_STORAGE_KEY = 'tshirt-lab:last-config:v1';
 const GOOGLE_FONTS_STYLESHEET_URL =
   'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@600;700&family=Oswald:wght@500;600;700&display=swap';
 const GOOGLE_FONTS_LINK_ID = 'tshirt-lab-google-fonts';
@@ -181,6 +225,13 @@ const SHIRT_SIZES: ShirtSizeOption[] = [
   { id: 'GG', label: 'GG', priceDelta: 12 },
 ];
 
+function normalizeBackTextInput(value: string) {
+  return value
+    .replace(/\s+/g, ' ')
+    .replace(/[^\x20-\x7EÀ-ÖØ-öø-ÿ]/g, '')
+    .slice(0, MAX_BACK_TEXT_CHARS);
+}
+
 type BackTextPlacement = {
   position: [number, number, number];
   rotation: [number, number, number];
@@ -196,6 +247,13 @@ type BackTextOverlay = {
 
 type StampPinAnchor = {
   position: [number, number, number];
+  normal: [number, number, number];
+};
+
+type ColorTransitionShader = {
+  uniforms: Record<string, { value: unknown }>;
+  vertexShader: string;
+  fragmentShader: string;
 };
 
 type ViewerVisualState = {
@@ -210,6 +268,7 @@ type TShirtModelProps = {
   useVerticalStamp: boolean;
   stampColor: string;
   backText: string;
+  backTextColor: string;
   backTextEnabled: boolean;
   backTextFontFamily: string;
   backTextFontWeight: number;
@@ -219,6 +278,9 @@ type TShirtModelProps = {
   previewSide: 'front' | 'back';
   modelScale: [number, number, number];
   stampPinWorldRef: React.MutableRefObject<THREE.Vector3 | null>;
+  backTextFocusWorldRef: React.MutableRefObject<THREE.Vector3 | null>;
+  stampPinFacingRef: React.MutableRefObject<boolean>;
+  onStampHoverChange: (hovered: boolean) => void;
   onLoadStateChange: (state: { status: 'loading' | 'ready' | 'error'; message?: string }) => void;
   onVisualStateChange: (state: ViewerVisualState) => void;
 };
@@ -236,7 +298,7 @@ function formatModelLoadError(error: unknown) {
 
   const message = error.message || fallback;
   if (message.includes('Invalid typed array length')) {
-    return 'Arquivos do modelo ausentes/corrompidos em src/playground/experiments/tshirt-lab/3d/ (shirt.gltf + .bin).';
+    return 'Arquivo do modelo ausente/corrompido em src/playground/experiments/tshirt-lab/3d/Shirt.glb.';
   }
   return message;
 }
@@ -264,7 +326,7 @@ function normalizeLoadedShirt(scene: THREE.Group): LoadedShirtModel {
   });
 
   const fittedBox = new THREE.Box3().setFromObject(root);
-  fittedBox.getSize(new THREE.Vector3());
+  const fittedSize = fittedBox.getSize(new THREE.Vector3());
   const modelCenter = fittedBox.getCenter(new THREE.Vector3());
 
   root.updateMatrixWorld(true);
@@ -338,13 +400,22 @@ function normalizeLoadedShirt(scene: THREE.Group): LoadedShirtModel {
     const worldPosition = marker.getWorldPosition(new THREE.Vector3());
     const worldQuaternion = marker.getWorldQuaternion(new THREE.Quaternion());
     const markerNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(worldQuaternion).normalize();
+    const markerRight = new THREE.Vector3(1, 0, 0).applyQuaternion(worldQuaternion).normalize();
     const outwardDirection = worldPosition.clone().sub(modelCenter).normalize();
     if (markerNormal.dot(outwardDirection) < 0) markerNormal.multiplyScalar(-1);
 
-    const lifted = worldPosition.clone().addScaledVector(markerNormal, 0.08);
+    // Desloca o pin para a extremidade direita da área da estampa para não cobrir a arte.
+    const sideOffset = Math.max(0.24, fittedSize.x * 0.18);
+    const lifted = worldPosition.clone().addScaledVector(markerRight, sideOffset).addScaledVector(markerNormal, 0.08);
     const localPosition = root.worldToLocal(lifted);
+    const rootWorldQuaternion = root.getWorldQuaternion(new THREE.Quaternion());
+    const localNormal = markerNormal
+      .clone()
+      .applyQuaternion(rootWorldQuaternion.invert())
+      .normalize();
     return {
       position: [localPosition.x, localPosition.y, localPosition.z],
+      normal: [localNormal.x, localNormal.y, localNormal.z],
     };
   };
 
@@ -423,6 +494,7 @@ const TShirtModel = ({
   useVerticalStamp,
   stampColor,
   backText,
+  backTextColor,
   backTextEnabled,
   backTextFontFamily,
   backTextFontWeight,
@@ -432,15 +504,227 @@ const TShirtModel = ({
   previewSide,
   modelScale,
   stampPinWorldRef,
+  backTextFocusWorldRef,
+  stampPinFacingRef,
+  onStampHoverChange,
   onLoadStateChange,
   onVisualStateChange,
 }: TShirtModelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const stampPinRef = useRef<THREE.Group>(null);
+  const backTextFocusRef = useRef<THREE.Group>(null);
   const stampWorldPositionRef = useRef(new THREE.Vector3());
+  const backTextFocusWorldPositionRef = useRef(new THREE.Vector3());
+  const stampWorldNormalRef = useRef(new THREE.Vector3());
+  const stampToCameraRef = useRef(new THREE.Vector3());
+  const stampQuaternionRef = useRef(new THREE.Quaternion());
+  const isHoveringStampRef = useRef(false);
+  const stampMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+  const shirtMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([]);
+  const colorPulseRef = useRef(0);
+  const stampRevealProgressRef = useRef(1);
+  const stampRevealDirectionRef = useRef<'vertical' | 'horizontal'>('vertical');
+  const colorTransitionProgressRef = useRef(1);
+  const colorTransitionFromRef = useRef(new THREE.Color(shirtColor));
+  const colorTransitionToRef = useRef(new THREE.Color(shirtColor));
+  const colorTransitionAxisRef = useRef<'vertical' | 'horizontal'>('vertical');
+  const lastShirtColorRef = useRef(shirtColor);
   const [loadedShirt, setLoadedShirt] = useState<LoadedShirtModel | null>(null);
   const [stampTexture, setStampTexture] = useState<THREE.Texture | null>(null);
   const [backTextTexture, setBackTextTexture] = useState<THREE.Texture | null>(null);
+  const stampColorCustomizable = useMemo(() => isStampColorCustomizable(stampTextureId), [stampTextureId]);
+
+  const ensureShirtColorTransitionShader = (material: THREE.MeshStandardMaterial, mesh: THREE.Mesh) => {
+    const transitionData = ((material.userData.colorTransition ??= {}) as {
+      patched?: boolean;
+      shader?: ColorTransitionShader;
+      rangeX?: [number, number];
+      rangeY?: [number, number];
+    });
+
+    if (!transitionData.rangeX || !transitionData.rangeY) {
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+      const bbox = mesh.geometry.boundingBox;
+      transitionData.rangeX = bbox ? [bbox.min.x, bbox.max.x] : [-0.5, 0.5];
+      transitionData.rangeY = bbox ? [bbox.min.y, bbox.max.y] : [-0.5, 0.5];
+    }
+
+    if (transitionData.patched) return;
+    transitionData.patched = true;
+
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.uColorTransitionProgress = { value: 1 };
+      shader.uniforms.uColorTransitionFrom = { value: colorTransitionToRef.current.clone() };
+      shader.uniforms.uColorTransitionTo = { value: colorTransitionToRef.current.clone() };
+      shader.uniforms.uColorTransitionAxis = { value: new THREE.Vector3(0, 1, 0) };
+      shader.uniforms.uColorTransitionRange = { value: new THREE.Vector2(...(transitionData.rangeY ?? [-0.5, 0.5])) };
+      shader.uniforms.uColorTransitionSoftness = { value: 0.12 };
+      shader.uniforms.uColorTransitionTime = { value: 0 };
+
+      shader.vertexShader = `
+varying float vColorTransitionCoord;
+varying vec3 vColorTransitionPos;
+uniform vec3 uColorTransitionAxis;
+` + shader.vertexShader;
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+vColorTransitionCoord = dot(transformed, uColorTransitionAxis);
+vColorTransitionPos = transformed;`
+      );
+
+      shader.fragmentShader = `
+varying float vColorTransitionCoord;
+varying vec3 vColorTransitionPos;
+uniform float uColorTransitionProgress;
+uniform vec3 uColorTransitionFrom;
+uniform vec3 uColorTransitionTo;
+uniform vec2 uColorTransitionRange;
+uniform float uColorTransitionSoftness;
+uniform float uColorTransitionTime;
+uniform vec3 uColorTransitionAxis;
+
+float hash12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+float noise2(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = hash12(i);
+  float b = hash12(i + vec2(1.0, 0.0));
+  float c = hash12(i + vec2(0.0, 1.0));
+  float d = hash12(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float fbm(vec2 p) {
+  float value = 0.0;
+  float amplitude = 0.5;
+  for (int i = 0; i < 4; i++) {
+    value += amplitude * noise2(p);
+    p = p * 2.03 + vec2(17.1, 9.2);
+    amplitude *= 0.5;
+  }
+  return value;
+}
+` + shader.fragmentShader;
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <color_fragment>',
+        `#include <color_fragment>
+float transitionSpan = max(0.0001, uColorTransitionRange.y - uColorTransitionRange.x);
+float transitionCoord = clamp((vColorTransitionCoord - uColorTransitionRange.x) / transitionSpan, 0.0, 1.0);
+
+float axisIsVertical = step(0.5, abs(uColorTransitionAxis.y));
+float perpCoord = mix(
+  vColorTransitionPos.y * 1.1 + vColorTransitionPos.z * 0.55,
+  vColorTransitionPos.x * 1.1 + vColorTransitionPos.z * 0.55,
+  axisIsVertical
+);
+float n1 = fbm(vec2(perpCoord * 2.8, transitionCoord * 5.4 + uColorTransitionTime * 1.25));
+float n2 = fbm(vec2(perpCoord * 5.7 + 5.3, transitionCoord * 8.2 - uColorTransitionTime * 0.9));
+float splashNoise = (n1 * 0.7 + n2 * 0.3) - 0.5;
+float ripple = sin(perpCoord * 11.0 + uColorTransitionTime * 6.5) * 0.03;
+float organicOffset = splashNoise * 0.22 + ripple;
+float transitionCoordOrganic = clamp(transitionCoord + organicOffset, 0.0, 1.0);
+
+float sweep = mix(
+  -uColorTransitionSoftness,
+  1.0 + uColorTransitionSoftness,
+  uColorTransitionProgress
+);
+float transitionMix = 1.0 - smoothstep(
+  sweep - uColorTransitionSoftness,
+  sweep + uColorTransitionSoftness,
+  transitionCoordOrganic
+);
+diffuseColor.rgb = mix(uColorTransitionFrom, uColorTransitionTo, transitionMix);`
+      );
+
+      transitionData.shader = shader as unknown as ColorTransitionShader;
+    };
+
+    material.customProgramCacheKey = () => 'tshirt-color-transition-v1';
+    material.needsUpdate = true;
+  };
+
+  const ensureStampRevealShader = (material: THREE.MeshStandardMaterial) => {
+    const stampRevealData = ((material.userData.stampReveal ??= {}) as {
+      patched?: boolean;
+      shader?: ColorTransitionShader;
+    });
+    if (stampRevealData.patched) return;
+    stampRevealData.patched = true;
+
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.uStampRevealProgress = { value: 1 };
+      shader.uniforms.uStampRevealDirection = { value: 0 };
+      shader.uniforms.uStampRevealTime = { value: 0 };
+
+      shader.fragmentShader = `
+uniform float uStampRevealProgress;
+uniform float uStampRevealDirection;
+uniform float uStampRevealTime;
+
+float stampHash12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+float stampNoise2(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = stampHash12(i);
+  float b = stampHash12(i + vec2(1.0, 0.0));
+  float c = stampHash12(i + vec2(0.0, 1.0));
+  float d = stampHash12(i + vec2(1.0, 1.0));
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float stampFbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 4; i++) {
+    v += a * stampNoise2(p);
+    p = p * 2.03 + vec2(19.7, 7.1);
+    a *= 0.5;
+  }
+  return v;
+}
+` + shader.fragmentShader;
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <map_fragment>',
+        `#include <map_fragment>
+float stampAxisCoord = mix(vMapUv.y, vMapUv.x, uStampRevealDirection);
+float stampNoiseA = stampFbm(vMapUv * 7.8 + vec2(0.0, uStampRevealTime * 0.45));
+float stampNoiseB = stampFbm(vMapUv.yx * 11.0 + vec2(uStampRevealTime * 0.26, 3.7));
+float splashNoise = (stampNoiseA * 0.68 + stampNoiseB * 0.32) - 0.5;
+float splashAmp = (1.0 - smoothstep(0.72, 1.0, uStampRevealProgress)) * 0.34;
+float stampSplash = splashNoise * splashAmp;
+float stampSweep = mix(1.32, -0.32, uStampRevealProgress);
+float stampMask = smoothstep(stampSweep - 0.14, stampSweep + 0.14, stampAxisCoord + stampSplash);
+stampMask = max(stampMask, smoothstep(0.97, 1.0, uStampRevealProgress));
+float stampFinalize = smoothstep(0.88, 1.0, uStampRevealProgress);
+stampMask = mix(stampMask, 1.0, stampFinalize);
+float stampEdge = smoothstep(0.0, 0.24, stampMask) * (1.0 - smoothstep(0.78, 1.0, stampMask));
+diffuseColor.rgb += stampEdge * 0.08;
+diffuseColor.a *= stampMask;`
+      );
+
+      stampRevealData.shader = shader as unknown as ColorTransitionShader;
+    };
+
+    material.customProgramCacheKey = () => 'tshirt-stamp-reveal-v1';
+    material.needsUpdate = true;
+  };
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -450,9 +734,85 @@ const TShirtModel = ({
       ? baseRotationY
       : baseRotationY + state.pointer.x * 0.24 + Math.sin(state.clock.elapsedTime * 0.35) * 0.05;
     const targetRotationX = stampFocusActive ? 0 : state.pointer.y * 0.12;
+    const floatAmplitude = stampFocusActive ? 0.014 : 0.036;
+    const targetFloatY = 0.06 + Math.sin(state.clock.elapsedTime * 1.12) * floatAmplitude;
+    const pulseTarget = colorPulseRef.current > 0.001 ? colorPulseRef.current : 0;
+    if (pulseTarget > 0) {
+      colorPulseRef.current = THREE.MathUtils.lerp(colorPulseRef.current, 0, 0.09);
+    } else {
+      colorPulseRef.current = 0;
+    }
+    const pulseTime = state.clock.elapsedTime;
+    const pulseOsc = Math.sin(pulseTime * 18) * 0.5 + 0.5;
+    const pulseEnergy = colorPulseRef.current * (0.45 + pulseOsc * 0.55);
+    const scaleBoost = 1 + colorPulseRef.current * 0.028 + Math.sin(pulseTime * 24) * 0.009 * colorPulseRef.current;
+    const yScaleBoost = 1 + colorPulseRef.current * 0.012;
+    if (colorTransitionProgressRef.current < 0.999) {
+      colorTransitionProgressRef.current = THREE.MathUtils.lerp(colorTransitionProgressRef.current, 1, 0.085);
+    } else {
+      colorTransitionProgressRef.current = 1;
+    }
 
     groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotationY, 0.06);
     groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotationX, 0.05);
+    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetFloatY, 0.08);
+    groupRef.current.scale.set(
+      modelScale[0] * scaleBoost,
+      modelScale[1] * yScaleBoost,
+      modelScale[2] * scaleBoost
+    );
+
+    if (stampRevealProgressRef.current < 0.999) {
+      stampRevealProgressRef.current = THREE.MathUtils.lerp(stampRevealProgressRef.current, 1, 0.18);
+    } else {
+      stampRevealProgressRef.current = 1;
+    }
+
+    if (shirtMaterialsRef.current.length > 0) {
+      const transitionAxis = colorTransitionAxisRef.current === 'horizontal' ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
+      for (const material of shirtMaterialsRef.current) {
+        // Pulso criativo de troca de cor: brilho suave + tecido temporariamente mais acetinado.
+        material.roughness = THREE.MathUtils.lerp(0.94, 0.62, pulseEnergy);
+        material.envMapIntensity = THREE.MathUtils.lerp(0.18, 0.56, pulseEnergy);
+        material.emissive.set('#ffffff');
+        material.emissiveIntensity = 0.075 * pulseEnergy;
+
+        const transitionData = material.userData.colorTransition as
+          | {
+              shader?: ColorTransitionShader;
+              rangeX?: [number, number];
+              rangeY?: [number, number];
+            }
+          | undefined;
+        const shader = transitionData?.shader;
+        if (!shader) continue;
+
+        const activeRange = colorTransitionAxisRef.current === 'horizontal' ? transitionData.rangeX : transitionData.rangeY;
+        const rangeStart = activeRange?.[0] ?? -0.5;
+        const rangeEnd = activeRange?.[1] ?? 0.5;
+
+        (shader.uniforms.uColorTransitionProgress.value as number) = colorTransitionProgressRef.current;
+        (shader.uniforms.uColorTransitionFrom.value as THREE.Color).copy(colorTransitionFromRef.current);
+        (shader.uniforms.uColorTransitionTo.value as THREE.Color).copy(colorTransitionToRef.current);
+        (shader.uniforms.uColorTransitionAxis.value as THREE.Vector3).copy(transitionAxis);
+        (shader.uniforms.uColorTransitionRange.value as THREE.Vector2).set(rangeStart, rangeEnd);
+        (shader.uniforms.uColorTransitionSoftness.value as number) =
+          colorTransitionAxisRef.current === 'horizontal' ? 0.1 : 0.12;
+        (shader.uniforms.uColorTransitionTime.value as number) = pulseTime;
+      }
+    }
+
+    if (stampMaterialsRef.current.length > 0) {
+      const stampDirection = 0;
+      for (const material of stampMaterialsRef.current) {
+        const stampRevealData = material.userData.stampReveal as { shader?: ColorTransitionShader } | undefined;
+        const shader = stampRevealData?.shader;
+        if (!shader) continue;
+        (shader.uniforms.uStampRevealProgress.value as number) = stampRevealProgressRef.current;
+        (shader.uniforms.uStampRevealDirection.value as number) = stampDirection;
+        (shader.uniforms.uStampRevealTime.value as number) = pulseTime;
+      }
+    }
 
     if (showStampPin && stampPinRef.current) {
       const worldPosition = stampPinRef.current.getWorldPosition(stampWorldPositionRef.current);
@@ -461,58 +821,42 @@ const TShirtModel = ({
       } else {
         stampPinWorldRef.current.copy(worldPosition);
       }
+
+      if (loadedShirt?.stampPinAnchor) {
+        const worldQuaternion = stampPinRef.current.getWorldQuaternion(stampQuaternionRef.current);
+        stampWorldNormalRef.current
+          .set(...loadedShirt.stampPinAnchor.normal)
+          .applyQuaternion(worldQuaternion)
+          .normalize();
+        stampToCameraRef.current.copy(state.camera.position).sub(worldPosition).normalize();
+        stampPinFacingRef.current = stampWorldNormalRef.current.dot(stampToCameraRef.current) > 0.1;
+      } else {
+        stampPinFacingRef.current = false;
+      }
     } else {
       stampPinWorldRef.current = null;
+      stampPinFacingRef.current = false;
+    }
+
+    if (backTextFocusRef.current) {
+      const worldPosition = backTextFocusRef.current.getWorldPosition(backTextFocusWorldPositionRef.current);
+      if (!backTextFocusWorldRef.current) {
+        backTextFocusWorldRef.current = worldPosition.clone();
+      } else {
+        backTextFocusWorldRef.current.copy(worldPosition);
+      }
+    } else {
+      backTextFocusWorldRef.current = null;
     }
   });
 
   useEffect(() => {
     let cancelled = false;
     const manager = new THREE.LoadingManager();
-    manager.setURLModifier((url) => {
-      if (url.endsWith('shirt.bin')) return shirtBinUrl;
-      if (url.endsWith('scene.bin')) return sceneBinUrl;
-      if (url.endsWith('01_drop.png')) return gltfDropTextureUrl;
-      return url;
-    });
-
     const loader = new GLTFLoader(manager);
     onLoadStateChange({ status: 'loading' });
 
-    const load = async () => {
-      try {
-        const [gltfResponse, textureResponse] = await Promise.all([
-          fetch(shirtModelUrl),
-          fetch(gltfDropTextureUrl),
-        ]);
-
-        if (!gltfResponse.ok) {
-          throw new Error(`Nao foi possivel ler shirt.gltf (${gltfResponse.status}).`);
-        }
-        if (!textureResponse.ok) throw new Error('Textura de estampa nao encontrada.');
-
-        type GltfBufferDef = { uri?: string; byteLength?: number };
-        type GltfMeta = { buffers?: GltfBufferDef[] };
-        const gltfMeta = (await gltfResponse.json()) as GltfMeta;
-        const bufferDef = gltfMeta.buffers?.[0];
-
-        if (bufferDef?.uri) {
-          const resolvedBinUrl = bufferDef.uri.endsWith('scene.bin') ? sceneBinUrl : shirtBinUrl;
-          const binResponse = await fetch(resolvedBinUrl);
-          if (!binResponse.ok) throw new Error(`Arquivo ${bufferDef.uri} nao encontrado.`);
-
-          const bufferData = await binResponse.arrayBuffer();
-          if (bufferDef.byteLength && bufferData.byteLength < bufferDef.byteLength) {
-            throw new Error(`Arquivo ${bufferDef.uri} invalido: esperado ${bufferDef.byteLength} bytes, recebido ${bufferData.byteLength}.`);
-          }
-        }
-      } catch (error) {
-        if (cancelled) return;
-        setLoadedShirt(null);
-        onLoadStateChange({ status: 'error', message: formatModelLoadError(error) });
-        return;
-      }
-
+    const load = () => {
       loader.load(
         shirtModelUrl,
         (gltf) => {
@@ -534,7 +878,7 @@ const TShirtModel = ({
       );
     };
 
-    void load();
+    load();
 
     return () => {
       cancelled = true;
@@ -599,18 +943,39 @@ const TShirtModel = ({
 
   useEffect(() => {
     const nextTexture = backTextEnabled
-      ? buildBackTextTexture(backText, stampColor, backTextFontFamily, backTextFontWeight)
+      ? buildBackTextTexture(backText, backTextColor, backTextFontFamily, backTextFontWeight)
       : null;
     setBackTextTexture(nextTexture);
     return () => {
       nextTexture?.dispose();
     };
-  }, [backText, backTextEnabled, stampColor, backTextFontFamily, backTextFontWeight, backTextFontRefreshKey]);
+  }, [backText, backTextEnabled, backTextColor, backTextFontFamily, backTextFontWeight, backTextFontRefreshKey]);
+
+  useEffect(() => {
+    if (lastShirtColorRef.current === shirtColor) return;
+    colorTransitionFromRef.current.set(lastShirtColorRef.current);
+    colorTransitionToRef.current.set(shirtColor);
+    colorTransitionProgressRef.current = 0;
+    colorTransitionAxisRef.current = colorTransitionAxisRef.current === 'vertical' ? 'horizontal' : 'vertical';
+    lastShirtColorRef.current = shirtColor;
+    colorPulseRef.current = 1;
+  }, [shirtColor]);
+
+  useEffect(() => {
+    if (!stampTexture) {
+      stampRevealProgressRef.current = 1;
+      return;
+    }
+    stampRevealProgressRef.current = 0;
+    stampRevealDirectionRef.current = 'vertical';
+  }, [stampTexture]);
 
   useEffect(() => {
     if (!loadedShirt) return;
 
     const hasStampTexture = Boolean(stampTexture);
+    const nextStampMaterials: THREE.MeshStandardMaterial[] = [];
+    const nextShirtMaterials: THREE.MeshStandardMaterial[] = [];
     const findObjectByName = (patterns: string[]): THREE.Object3D | null => {
       for (const pattern of patterns) {
         const exact = loadedShirt.root.getObjectByName(pattern);
@@ -649,18 +1014,41 @@ const TShirtModel = ({
         const isBackTextMaterial = materialName.includes('text_texture') || meshName.includes('text_back') || meshName.includes('back_text');
 
         if (isStampMaterial) {
+          ensureStampRevealShader(targetMaterial);
           const mapChanged = targetMaterial.map !== stampTexture;
+          const useOriginalStampColors = !stampColorCustomizable;
+          const desiredEmissiveMap = useOriginalStampColors ? stampTexture : null;
+          const emissiveMapChanged = targetMaterial.emissiveMap !== desiredEmissiveMap;
+          const desiredToneMapped = !useOriginalStampColors;
+          const toneMappedChanged = targetMaterial.toneMapped !== desiredToneMapped;
           targetMaterial.transparent = true;
-          targetMaterial.alphaTest = 0.35;
+          targetMaterial.alphaTest = 0.02;
           targetMaterial.side = THREE.DoubleSide;
           targetMaterial.depthWrite = false;
           targetMaterial.polygonOffset = true;
           targetMaterial.polygonOffsetFactor = -1;
           targetMaterial.polygonOffsetUnits = -1;
           targetMaterial.map = stampTexture;
-          targetMaterial.color.set(stampColor);
+          targetMaterial.color.set(useOriginalStampColors ? '#ffffff' : stampColor);
+          targetMaterial.emissiveMap = desiredEmissiveMap;
+          if (useOriginalStampColors) {
+            // Estampa de cor fixa: mantém leitura original da arte, sem "lavar" por tint.
+            targetMaterial.emissive.set('#ffffff');
+            targetMaterial.emissiveIntensity = hasStampTexture ? 0.75 : 0;
+            targetMaterial.toneMapped = false;
+          } else {
+            targetMaterial.emissiveMap = null;
+            targetMaterial.emissive.set('#000000');
+            targetMaterial.emissiveIntensity = 0;
+            targetMaterial.toneMapped = true;
+          }
+          targetMaterial.metalness = 0;
+          targetMaterial.roughness = 1;
           targetMaterial.opacity = hasStampTexture ? 1 : 0;
-          if (mapChanged) targetMaterial.needsUpdate = true;
+          if (mapChanged || emissiveMapChanged || toneMappedChanged) targetMaterial.needsUpdate = true;
+          if (!nextStampMaterials.includes(targetMaterial)) {
+            nextStampMaterials.push(targetMaterial);
+          }
         } else if (isBackTextMaterial) {
           const mapChanged = targetMaterial.map !== backTextTexture;
           targetMaterial.transparent = true;
@@ -677,19 +1065,93 @@ const TShirtModel = ({
           targetMaterial.depthWrite = false;
           if (mapChanged) targetMaterial.needsUpdate = true;
         } else {
+          // Look de tecido: quase sem reflexo metálico, alta rugosidade e baixa influência de ambiente.
+          ensureShirtColorTransitionShader(targetMaterial, child);
           targetMaterial.color.set(shirtColor);
+          targetMaterial.metalness = 0;
+          targetMaterial.roughness = 0.94;
+          targetMaterial.envMapIntensity = 0.18;
+          targetMaterial.emissive.set('#000000');
+          targetMaterial.emissiveIntensity = 0;
+          targetMaterial.transparent = false;
+          targetMaterial.opacity = 1;
+          targetMaterial.alphaTest = 0;
+          targetMaterial.depthWrite = true;
+          targetMaterial.polygonOffset = false;
+          targetMaterial.toneMapped = true;
+          targetMaterial.needsUpdate = true;
+          if (!nextShirtMaterials.includes(targetMaterial)) {
+            nextShirtMaterials.push(targetMaterial);
+          }
         }
       });
     });
-  }, [loadedShirt, shirtColor, stampTexture, stampColor, backTextTexture, backTextEnabled, previewSide, useVerticalStamp]);
+    stampMaterialsRef.current = nextStampMaterials;
+    shirtMaterialsRef.current = nextShirtMaterials;
+  }, [
+    loadedShirt,
+    shirtColor,
+    stampTexture,
+    stampColor,
+    stampColorCustomizable,
+    backTextTexture,
+    backTextEnabled,
+    previewSide,
+    useVerticalStamp,
+  ]);
+
+  useEffect(() => {
+    if (showStampPin) return;
+    if (isHoveringStampRef.current) {
+      isHoveringStampRef.current = false;
+      onStampHoverChange(false);
+    }
+  }, [showStampPin, onStampHoverChange]);
+
+  const isStampSurfaceObject = (object: THREE.Object3D | null | undefined) => {
+    if (!object) return false;
+    const source = object instanceof THREE.Mesh ? object : object.parent;
+    if (!(source instanceof THREE.Mesh)) return false;
+    const meshName = source.name?.toLowerCase() ?? '';
+    if (meshName.includes('stamp')) return true;
+    const materials = Array.isArray(source.material) ? source.material : [source.material];
+    return materials.some((material) => {
+      const materialName = (material as THREE.Material | undefined)?.name?.toLowerCase() ?? '';
+      return materialName.includes('stamp');
+    });
+  };
+
+  const updateStampHoverState = (nextHovered: boolean) => {
+    if (isHoveringStampRef.current === nextHovered) return;
+    isHoveringStampRef.current = nextHovered;
+    onStampHoverChange(nextHovered);
+  };
+
+  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
+    if (!showStampPin) return;
+    const isStampSurface = isStampSurfaceObject(event.object);
+    updateStampHoverState(isStampSurface);
+    if (isStampSurface) event.stopPropagation();
+  };
+
+  const handlePointerOut = () => {
+    updateStampHoverState(false);
+  };
 
   return (
-    <group ref={groupRef} position={[0, -0.08, 0]} scale={modelScale}>
+    <group ref={groupRef} position={[0, 0.06, 0]} scale={modelScale}>
       {loadedShirt ? (
-        <primitive object={loadedShirt.root}>
+        <primitive
+          object={loadedShirt.root}
+          onPointerMove={handlePointerMove}
+          onPointerOut={handlePointerOut}
+          onPointerMissed={handlePointerOut}
+          onPointerCancel={handlePointerOut}
+        >
           {loadedShirt.stampPinAnchor && showStampPin ? (
             <group ref={stampPinRef} position={loadedShirt.stampPinAnchor.position} />
           ) : null}
+          <group ref={backTextFocusRef} position={loadedShirt.backTextPlacement.position} />
         </primitive>
       ) : null}
     </group>
@@ -698,43 +1160,30 @@ const TShirtModel = ({
 
 type StampPinProjectorProps = {
   stampPinWorldRef: React.MutableRefObject<THREE.Vector3 | null>;
-  pinAnchorRef: React.MutableRefObject<HTMLSpanElement | null>;
-  pinLineRef: React.MutableRefObject<HTMLSpanElement | null>;
-  pinLineEndRef: React.MutableRefObject<HTMLSpanElement | null>;
-  pinButtonRef: React.MutableRefObject<HTMLButtonElement | null>;
+  stampPinFacingRef: React.MutableRefObject<boolean>;
+  pinAnchorRef: React.MutableRefObject<HTMLButtonElement | null>;
   showPin: boolean;
 };
 
-const StampPinProjector = ({ stampPinWorldRef, pinAnchorRef, pinLineRef, pinLineEndRef, pinButtonRef, showPin }: StampPinProjectorProps) => {
+const StampPinProjector = ({
+  stampPinWorldRef,
+  stampPinFacingRef,
+  pinAnchorRef,
+  showPin,
+}: StampPinProjectorProps) => {
   const { camera, size } = useThree();
   const projectedRef = useRef(new THREE.Vector3());
-  const buttonPointRef = useRef(new THREE.Vector2());
-  const anchorPointRef = useRef(new THREE.Vector2());
-  const lineRevealRef = useRef(0);
-  const wasVisibleRef = useRef(false);
+  const revealRef = useRef(0);
 
   useFrame(() => {
     const pinAnchor = pinAnchorRef.current;
-    const pinLine = pinLineRef.current;
-    const pinLineEnd = pinLineEndRef.current;
-    const pinButton = pinButtonRef.current;
     const worldPoint = stampPinWorldRef.current;
-    if (!pinButton || !pinAnchor || !pinLine || !pinLineEnd || !showPin || !(camera instanceof THREE.PerspectiveCamera) || !worldPoint) {
-      lineRevealRef.current = 0;
-      wasVisibleRef.current = false;
-      if (pinAnchor) {
-        pinAnchor.style.opacity = '0';
-      }
-      if (pinLine) {
-        pinLine.style.opacity = '0';
-      }
-      if (pinLineEnd) {
-        pinLineEnd.style.opacity = '0';
-      }
-      if (pinButton) {
-        pinButton.style.opacity = '0';
-        pinButton.style.pointerEvents = 'none';
-      }
+    if (!pinAnchor) return;
+
+    if (!stampPinFacingRef.current || !(camera instanceof THREE.PerspectiveCamera) || !worldPoint) {
+      revealRef.current = THREE.MathUtils.lerp(revealRef.current, 0, 0.25);
+      pinAnchor.style.opacity = `${revealRef.current}`;
+      pinAnchor.style.transform = 'translate(-100vw, -100vh)';
       return;
     }
 
@@ -745,50 +1194,16 @@ const StampPinProjector = ({ stampPinWorldRef, pinAnchorRef, pinLineRef, pinLine
     const inBounds = anchorX >= 0 && anchorX <= size.width && anchorY >= 0 && anchorY <= size.height;
     const visible = inDepth && inBounds;
     if (!visible) {
-      lineRevealRef.current = 0;
-      wasVisibleRef.current = false;
-      pinAnchor.style.opacity = '0';
-      pinLine.style.opacity = '0';
-      pinLineEnd.style.opacity = '0';
-      pinButton.style.opacity = '0';
-      pinButton.style.pointerEvents = 'none';
+      revealRef.current = THREE.MathUtils.lerp(revealRef.current, 0, 0.2);
+      pinAnchor.style.opacity = `${revealRef.current}`;
+      pinAnchor.style.transform = 'translate(-100vw, -100vh)';
       return;
     }
 
-    if (!wasVisibleRef.current) {
-      lineRevealRef.current = 0;
-    }
-    wasVisibleRef.current = true;
-    lineRevealRef.current = THREE.MathUtils.lerp(lineRevealRef.current, 1, 0.28);
-
-    pinAnchor.style.opacity = '1';
+    const targetReveal = showPin ? 1 : 0;
+    revealRef.current = THREE.MathUtils.lerp(revealRef.current, targetReveal, 0.24);
+    pinAnchor.style.opacity = `${revealRef.current}`;
     pinAnchor.style.transform = `translate(${anchorX}px, ${anchorY}px) translate(-50%, -50%)`;
-
-    const side = anchorX > size.width * 0.58 ? -1 : 1;
-    const targetX = THREE.MathUtils.clamp(anchorX + side * 148, 72, size.width - 72);
-    const targetY = THREE.MathUtils.clamp(anchorY + 92, 52, size.height - 52);
-    anchorPointRef.current.set(anchorX, anchorY);
-    buttonPointRef.current.set(targetX, targetY);
-
-    const dx = buttonPointRef.current.x - anchorPointRef.current.x;
-    const dy = buttonPointRef.current.y - anchorPointRef.current.y;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx);
-    const revealedLength = length * lineRevealRef.current;
-
-    pinLine.style.opacity = '1';
-    pinLine.style.width = `${revealedLength}px`;
-    pinLine.style.transform = `translate(${anchorX}px, ${anchorY}px) rotate(${angle}rad)`;
-
-    const endX = anchorX + Math.cos(angle) * revealedLength;
-    const endY = anchorY + Math.sin(angle) * revealedLength;
-    pinLineEnd.style.opacity = '1';
-    pinLineEnd.style.transform = `translate(${endX}px, ${endY}px) translate(-50%, -50%)`;
-
-    const buttonOpacity = THREE.MathUtils.clamp((lineRevealRef.current - 0.84) / 0.16, 0, 1);
-    pinButton.style.opacity = `${buttonOpacity}`;
-    pinButton.style.pointerEvents = buttonOpacity > 0.98 ? 'auto' : 'none';
-    pinButton.style.transform = `translate(${targetX}px, ${targetY}px) translate(-50%, -50%)`;
   });
 
   return null;
@@ -797,14 +1212,23 @@ const StampPinProjector = ({ stampPinWorldRef, pinAnchorRef, pinLineRef, pinLine
 type CameraDirectorProps = {
   controlsRef: React.RefObject<OrbitControlsImpl | null>;
   stampPinWorldRef: React.MutableRefObject<THREE.Vector3 | null>;
+  backTextFocusWorldRef: React.MutableRefObject<THREE.Vector3 | null>;
   stampFocusActive: boolean;
+  backTextFocusActive: boolean;
 };
 
-const CameraDirector = ({ controlsRef, stampPinWorldRef, stampFocusActive }: CameraDirectorProps) => {
+const CameraDirector = ({
+  controlsRef,
+  stampPinWorldRef,
+  backTextFocusWorldRef,
+  stampFocusActive,
+  backTextFocusActive,
+}: CameraDirectorProps) => {
   const { camera } = useThree();
   const defaultPosition = useMemo(() => new THREE.Vector3(0, 0.82, 5.2), []);
   const defaultTarget = useMemo(() => new THREE.Vector3(0, 0.8, 0), []);
-  const focusOffset = useMemo(() => new THREE.Vector3(0, 0.02, 0.38), []);
+  const stampFocusOffset = useMemo(() => new THREE.Vector3(0, 0.02, 0.38), []);
+  const backTextFocusOffset = useMemo(() => new THREE.Vector3(0, 0.06, 0.48), []);
   const focusPosition = useRef(new THREE.Vector3());
   const focusTarget = useRef(new THREE.Vector3());
   const wasFocusActiveRef = useRef(false);
@@ -815,11 +1239,27 @@ const CameraDirector = ({ controlsRef, stampPinWorldRef, stampFocusActive }: Cam
     const controls = controlsRef.current;
     if (!controls || !(camera instanceof THREE.PerspectiveCamera)) return;
 
+    const backTextFocusPosition = backTextFocusWorldRef.current;
+    if (backTextFocusActive && backTextFocusPosition) {
+      wasFocusActiveRef.current = true;
+      focusTarget.current.copy(backTextFocusPosition);
+      focusPosition.current.copy(backTextFocusPosition).add(backTextFocusOffset);
+      camera.position.lerp(focusPosition.current, 0.2);
+      controls.target.lerp(focusTarget.current, 0.2);
+      camera.fov = THREE.MathUtils.lerp(camera.fov, 20, 0.2);
+      if (Math.abs(camera.fov - lastFovRef.current) > 0.001) {
+        camera.updateProjectionMatrix();
+        lastFovRef.current = camera.fov;
+      }
+      controls.update();
+      return;
+    }
+
     const stampPinPosition = stampPinWorldRef.current;
     if (stampFocusActive && stampPinPosition) {
       wasFocusActiveRef.current = true;
       focusTarget.current.copy(stampPinPosition);
-      focusPosition.current.copy(stampPinPosition).add(focusOffset);
+      focusPosition.current.copy(stampPinPosition).add(stampFocusOffset);
       camera.position.lerp(focusPosition.current, 0.24);
       controls.target.lerp(focusTarget.current, 0.24);
       camera.fov = THREE.MathUtils.lerp(camera.fov, 18, 0.24);
@@ -858,14 +1298,18 @@ const CameraDirector = ({ controlsRef, stampPinWorldRef, stampFocusActive }: Cam
 const TshirtLab = () => {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const stampPinWorldRef = useRef<THREE.Vector3 | null>(null);
-  const stampPinAnchorRef = useRef<HTMLSpanElement | null>(null);
-  const stampPinLineRef = useRef<HTMLSpanElement | null>(null);
-  const stampPinLineEndRef = useRef<HTMLSpanElement | null>(null);
-  const stampPinButtonRef = useRef<HTMLButtonElement | null>(null);
+  const backTextFocusWorldRef = useRef<THREE.Vector3 | null>(null);
+  const stampPinFacingRef = useRef(false);
+  const stampPinAnchorRef = useRef<HTMLButtonElement | null>(null);
   const stampRailRef = useRef<HTMLDivElement | null>(null);
+  const quickBackTextInputRef = useRef<HTMLInputElement | null>(null);
+  const previousStepRef = useRef(0);
+  const hasRestoredSessionRef = useRef(false);
+  const hasSkippedInitialPersistRef = useRef(false);
   const suppressStampClickUntilRef = useRef(0);
   const [shirtColor, setShirtColor] = useState(SHIRT_COLORS[0].value);
   const [stampColor, setStampColor] = useState(STAMP_COLORS[1].value);
+  const [backTextColor, setBackTextColor] = useState(STAMP_COLORS[1].value);
   const [stampId, setStampId] = useState<StampId>(DEFAULT_STAMP_ID);
   const [shirtModelId, setShirtModelId] = useState<ShirtModelId>('regular');
   const [shirtSizeId, setShirtSizeId] = useState<ShirtSizeId>('M');
@@ -888,15 +1332,19 @@ const TshirtLab = () => {
   const [viewerVisualState, setViewerVisualState] = useState<ViewerVisualState>({ status: 'idle', message: '' });
   const hasMountedColorStateRef = useRef(false);
   const [stampFocusActive, setStampFocusActive] = useState(false);
+  const [stampHoverActive, setStampHoverActive] = useState(false);
+  const [pinUiHoverActive, setPinUiHoverActive] = useState(false);
+  const [quickBackTextEditorOpen, setQuickBackTextEditorOpen] = useState(false);
 
   const selectedModel = useMemo(() => SHIRT_MODELS.find((item) => item.id === shirtModelId) ?? SHIRT_MODELS[0], [shirtModelId]);
   const selectedSize = useMemo(() => SHIRT_SIZES.find((item) => item.id === shirtSizeId) ?? SHIRT_SIZES[2], [shirtSizeId]);
   const selectedStamp = useMemo(() => STAMP_OPTIONS.find((item) => item.id === stampId) ?? STAMP_OPTIONS[0], [stampId]);
   const selectedStampTextureUrl = useMemo(() => selectedStamp.textureUrl ?? null, [selectedStamp.textureUrl]);
   const useVerticalStamp = useMemo(() => isVerticalStampId(selectedStamp.id), [selectedStamp.id]);
+  const stampColorCustomizable = useMemo(() => isStampColorCustomizable(selectedStamp.id), [selectedStamp.id]);
   const selectedStampColorLabel = useMemo(
-    () => STAMP_COLORS.find((item) => item.value === stampColor)?.label ?? 'Custom',
-    [stampColor]
+    () => (stampColorCustomizable ? STAMP_COLORS.find((item) => item.value === stampColor)?.label ?? 'Custom' : 'Cores originais'),
+    [stampColor, stampColorCustomizable]
   );
   const selectedBackTextFont = useMemo(
     () => BACK_TEXT_FONT_OPTIONS.find((font) => font.id === backTextFontId) ?? BACK_TEXT_FONT_OPTIONS[0],
@@ -990,11 +1438,22 @@ const TshirtLab = () => {
   }, [activeStep, modelState.status, checkoutReady, paymentMethod, backTextEnabled, cleanedBackText]);
 
   const handleBackTextChange = (value: string) => {
-    const normalized = value
-      .replace(/\s+/g, ' ')
-      .replace(/[^\x20-\x7EÀ-ÖØ-öø-ÿ]/g, '')
-      .slice(0, MAX_BACK_TEXT_CHARS);
+    const normalized = normalizeBackTextInput(value);
     setBackText(normalized);
+  };
+
+  const handleOpenQuickBackTextEditor = () => {
+    setBackTextEnabled(true);
+    setStampFocusActive(false);
+    setStampHoverActive(false);
+    setPinUiHoverActive(false);
+    setPreviewSide('back');
+    setQuickBackTextEditorOpen(true);
+  };
+
+  const handleConfirmQuickBackTextEditor = () => {
+    setQuickBackTextEditorOpen(false);
+    setPreviewSide('front');
   };
 
   const handleNextStep = () => {
@@ -1018,9 +1477,12 @@ const TshirtLab = () => {
     setGiftWrapEnabled(false);
     setBackTextEnabled(false);
     setBackText('');
+    setBackTextColor(STAMP_COLORS[1].value);
+    setQuickBackTextEditorOpen(false);
     setPreviewSide('front');
     setStampFocusActive(false);
     stampPinWorldRef.current = null;
+    backTextFocusWorldRef.current = null;
     setCheckoutName('');
     setCheckoutEmail('');
     setCheckoutAddress('');
@@ -1030,19 +1492,134 @@ const TshirtLab = () => {
   };
 
   useEffect(() => {
+    if (hasRestoredSessionRef.current) return;
+    hasRestoredSessionRef.current = true;
+
+    try {
+      const raw = window.localStorage.getItem(TSHIRT_LAB_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<SavedTshirtLabConfig> | null;
+      if (!parsed || parsed.version !== 1) return;
+
+      const validShirtColor = SHIRT_COLORS.some((color) => color.value === parsed.shirtColor);
+      if (validShirtColor && parsed.shirtColor) setShirtColor(parsed.shirtColor);
+
+      const validStampColor = STAMP_COLORS.some((color) => color.value === parsed.stampColor);
+      if (validStampColor && parsed.stampColor) setStampColor(parsed.stampColor);
+
+      const validBackTextColor = STAMP_COLORS.some((color) => color.value === parsed.backTextColor);
+      if (validBackTextColor && parsed.backTextColor) setBackTextColor(parsed.backTextColor);
+
+      const validStampId = STAMP_OPTIONS.some((stamp) => stamp.id === parsed.stampId);
+      if (validStampId && parsed.stampId) setStampId(parsed.stampId);
+
+      const validModelId = SHIRT_MODELS.some((model) => model.id === parsed.shirtModelId);
+      if (validModelId && parsed.shirtModelId) setShirtModelId(parsed.shirtModelId);
+
+      const validSizeId = SHIRT_SIZES.some((size) => size.id === parsed.shirtSizeId);
+      if (validSizeId && parsed.shirtSizeId) setShirtSizeId(parsed.shirtSizeId);
+
+      if (typeof parsed.giftWrapEnabled === 'boolean') setGiftWrapEnabled(parsed.giftWrapEnabled);
+      if (typeof parsed.backTextEnabled === 'boolean') setBackTextEnabled(parsed.backTextEnabled);
+
+      if (typeof parsed.backText === 'string') setBackText(normalizeBackTextInput(parsed.backText));
+
+      const validFontId = BACK_TEXT_FONT_OPTIONS.some((font) => font.id === parsed.backTextFontId);
+      if (validFontId && parsed.backTextFontId) setBackTextFontId(parsed.backTextFontId);
+    } catch {
+      // Ignora sessão inválida e mantém defaults.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasRestoredSessionRef.current) return;
+    if (!hasSkippedInitialPersistRef.current) {
+      hasSkippedInitialPersistRef.current = true;
+      return;
+    }
+    try {
+      const payload: SavedTshirtLabConfig = {
+        version: 1,
+        shirtColor,
+        stampColor,
+        backTextColor,
+        stampId,
+        shirtModelId,
+        shirtSizeId,
+        giftWrapEnabled,
+        backTextEnabled,
+        backText: normalizeBackTextInput(backText),
+        backTextFontId,
+      };
+      window.localStorage.setItem(TSHIRT_LAB_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // Sem quota/permissão de storage: segue sem persistência.
+    }
+  }, [
+    shirtColor,
+    stampColor,
+    backTextColor,
+    stampId,
+    shirtModelId,
+    shirtSizeId,
+    giftWrapEnabled,
+    backTextEnabled,
+    backText,
+    backTextFontId,
+  ]);
+
+  useEffect(() => {
+    if (quickBackTextEditorOpen) {
+      setPreviewSide('back');
+      previousStepRef.current = activeStep;
+      return;
+    }
+
+    const previousStep = previousStepRef.current;
+    previousStepRef.current = activeStep;
+
     if (activeStep !== 1) {
       setPreviewSide('front');
       return;
     }
-    setPreviewSide(backTextEnabled ? 'back' : 'front');
-  }, [activeStep, backTextEnabled]);
+    if (!backTextEnabled) {
+      setPreviewSide('front');
+      return;
+    }
+    if (previousStep !== 1) {
+      setPreviewSide('back');
+    }
+  }, [activeStep, backTextEnabled, quickBackTextEditorOpen]);
+
+  useEffect(() => {
+    if (!quickBackTextEditorOpen) return;
+    const timeout = window.setTimeout(() => {
+      quickBackTextInputRef.current?.focus();
+      quickBackTextInputRef.current?.select();
+    }, 80);
+    return () => window.clearTimeout(timeout);
+  }, [quickBackTextEditorOpen]);
+
+  useEffect(() => {
+    if (backTextEnabled) return;
+    setQuickBackTextEditorOpen(false);
+  }, [backTextEnabled]);
 
   useEffect(() => {
     if (previewSide === 'back' || stampId === 'none') {
       setStampFocusActive(false);
+      setStampHoverActive(false);
+      setPinUiHoverActive(false);
       stampPinWorldRef.current = null;
+      stampPinFacingRef.current = false;
     }
   }, [previewSide, stampId]);
+
+  const stampPinVisible =
+    modelState.status === 'ready' &&
+    previewSide === 'front' &&
+    stampId !== 'none' &&
+    (stampHoverActive || pinUiHoverActive || stampFocusActive);
 
   useEffect(() => {
     const existing = document.getElementById(GOOGLE_FONTS_LINK_ID);
@@ -1194,17 +1771,33 @@ const TshirtLab = () => {
         <div className="grid min-h-0 flex-1 overflow-hidden rounded-[32px] border border-white/10 bg-[#0b0c11] shadow-[0_24px_72px_rgba(0,0,0,0.6)] grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_390px] md:grid-rows-1">
           <div className="flex min-h-0 flex-col">
             <div className="relative min-h-0 flex-1">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_42%,rgba(255,255,255,0.06)_0%,rgba(8,9,12,0.8)_68%,rgba(5,6,9,0.97)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,#05070c_0%,#090d15_56%,#0d1119_100%)]" />
+              <div className="absolute inset-0 opacity-45 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(120,154,220,0.16)_0%,rgba(30,43,72,0.08)_38%,transparent_72%)]" />
               <Canvas shadows camera={{ position: [0, 0.82, 5.2], fov: 33 }} className="!absolute !inset-0">
-                <ambientLight intensity={0.5} />
+                <ambientLight intensity={0.44} />
+                <hemisphereLight args={['#d9e3f7', '#131826', 0.24]} />
                 <directionalLight
-                  position={[2.8, 4, 2.2]}
-                  intensity={1.25}
+                  position={[0.35, 4.2, 2.45]}
+                  intensity={0.78}
                   castShadow
                   shadow-mapSize-width={1024}
                   shadow-mapSize-height={1024}
+                  shadow-bias={-0.0005}
+                  shadow-normalBias={0.035}
+                  shadow-radius={4}
+                  shadow-camera-near={0.5}
+                  shadow-camera-far={14}
+                  shadow-camera-left={-3.4}
+                  shadow-camera-right={3.4}
+                  shadow-camera-top={3.2}
+                  shadow-camera-bottom={-3.2}
                 />
-                <spotLight position={[-2.4, 2.8, 3]} intensity={0.62} angle={0.48} penumbra={0.65} />
+                <spotLight position={[0.2, 2.4, 2.65]} intensity={0.18} angle={0.58} penumbra={0.9} />
+                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.03, 0]} receiveShadow>
+                  <planeGeometry args={[8, 8]} />
+                  <shadowMaterial transparent opacity={0.08} />
+                </mesh>
                 <TShirtModel
                   shirtColor={shirtColor}
                   stampTextureId={stampId}
@@ -1212,6 +1805,7 @@ const TshirtLab = () => {
                   useVerticalStamp={useVerticalStamp}
                   stampColor={stampColor}
                   backText={cleanedBackText}
+                  backTextColor={backTextColor}
                   backTextEnabled={backTextEnabled}
                   backTextFontFamily={selectedBackTextFont.family}
                   backTextFontWeight={selectedBackTextFont.weight}
@@ -1221,19 +1815,26 @@ const TshirtLab = () => {
                   previewSide={previewSide}
                   modelScale={selectedModel.scale}
                   stampPinWorldRef={stampPinWorldRef}
+                  backTextFocusWorldRef={backTextFocusWorldRef}
+                  stampPinFacingRef={stampPinFacingRef}
+                  onStampHoverChange={setStampHoverActive}
                   onLoadStateChange={setModelState}
                   onVisualStateChange={setViewerVisualState}
                 />
                 <StampPinProjector
                   stampPinWorldRef={stampPinWorldRef}
+                  stampPinFacingRef={stampPinFacingRef}
                   pinAnchorRef={stampPinAnchorRef}
-                  pinLineRef={stampPinLineRef}
-                  pinLineEndRef={stampPinLineEndRef}
-                  pinButtonRef={stampPinButtonRef}
-                  showPin={modelState.status === 'ready' && previewSide === 'front' && stampId !== 'none'}
+                  showPin={stampPinVisible}
                 />
-                <CameraDirector controlsRef={controlsRef} stampPinWorldRef={stampPinWorldRef} stampFocusActive={stampFocusActive} />
-                <ContactShadows position={[0, -1.02, 0]} scale={5.2} blur={2.6} opacity={0.42} far={3.2} />
+                <CameraDirector
+                  controlsRef={controlsRef}
+                  stampPinWorldRef={stampPinWorldRef}
+                  backTextFocusWorldRef={backTextFocusWorldRef}
+                  stampFocusActive={stampFocusActive}
+                  backTextFocusActive={quickBackTextEditorOpen}
+                />
+                <ContactShadows position={[0, -1.01, 0]} scale={3.8} blur={3.6} opacity={0.16} far={2.25} />
                 <Environment preset="studio" />
                 <OrbitControls
                   ref={controlsRef}
@@ -1244,44 +1845,91 @@ const TshirtLab = () => {
                   maxPolarAngle={Math.PI / 1.9}
                 />
               </Canvas>
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,transparent_44%,rgba(6,7,10,0.48)_100%)]" />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,transparent_54%,rgba(0,0,0,0.28)_100%)]" />
               <div className="pointer-events-none absolute inset-0 z-[18]">
-                <span
-                  ref={stampPinAnchorRef}
-                  className="absolute left-0 top-0 h-2.5 w-2.5 rounded-full border border-white/70 bg-white/95 opacity-0 shadow-[0_0_10px_rgba(255,255,255,0.72)]"
-                  style={{ transform: 'translate(-100vw, -100vh)' }}
-                />
-                <span
-                  ref={stampPinLineRef}
-                  className="absolute left-0 top-0 h-px origin-left bg-white/80 opacity-0"
-                  style={{ transform: 'translate(-100vw, -100vh)' }}
-                />
-                <span
-                  ref={stampPinLineEndRef}
-                  className="absolute left-0 top-0 h-2 w-2 rounded-full border border-white/80 bg-white opacity-0 shadow-[0_0_8px_rgba(255,255,255,0.7)]"
-                  style={{ transform: 'translate(-100vw, -100vh)' }}
-                />
                 <button
-                  ref={stampPinButtonRef}
+                  ref={stampPinAnchorRef}
                   type="button"
                   onClick={() => {
                     if (!stampPinWorldRef.current) return;
                     setStampFocusActive((current) => !current);
                     setPreviewSide('front');
                   }}
-                  className="group pointer-events-auto absolute left-0 top-0 flex h-7 w-7 items-center justify-center rounded-full border border-white/58 bg-black/68 text-white/88 opacity-0 shadow-[0_14px_28px_rgba(0,0,0,0.4)] backdrop-blur-md transition-colors duration-150 hover:border-white/90"
+                  onMouseEnter={() => setPinUiHoverActive(true)}
+                  onMouseLeave={() => setPinUiHoverActive(false)}
+                  onFocus={() => setPinUiHoverActive(true)}
+                  onBlur={() => setPinUiHoverActive(false)}
+                  aria-label={stampFocusActive ? 'Voltar visao geral' : 'Detalhe da estampa'}
+                  className="group pointer-events-auto absolute left-0 top-0 flex items-center gap-2 rounded-full border border-black/15 bg-white/93 px-2 py-1 opacity-0 shadow-[0_8px_18px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-colors duration-150 hover:bg-white"
                   style={{ transform: 'translate(-100vw, -100vh)' }}
-                  aria-label={stampFocusActive ? 'Voltar visao geral' : 'Zoom estampa'}
                 >
-                  <span className="h-2.5 w-2.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.85)]" />
+                  <span className="relative h-4 w-4 rounded-full border-2 border-[#ff5b00] bg-black shadow-[0_0_0_2px_rgba(255,91,0,0.2)]">
+                    <span className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ff5b00]" />
+                  </span>
                   <span
-                    className={`pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/16 bg-black/84 px-2.5 py-1 text-[9px] font-mono uppercase tracking-[0.14em] text-white/85 shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition ${
-                      stampFocusActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    className={`pointer-events-none whitespace-nowrap text-[10px] font-mono uppercase tracking-[0.14em] text-black/80 transition-opacity ${
+                      stampPinVisible ? 'opacity-100' : 'opacity-0'
                     }`}
                   >
-                    {stampFocusActive ? 'voltar visao' : 'zoom estampa'}
+                    {stampFocusActive ? 'voltar' : 'detalhe'}
                   </span>
                 </button>
+              </div>
+
+              <div className="absolute right-4 top-4 z-[19] flex flex-col items-end gap-2">
+                {!quickBackTextEditorOpen ? (
+                  <button
+                    type="button"
+                    onClick={handleOpenQuickBackTextEditor}
+                    disabled={modelState.status !== 'ready'}
+                    className="rounded-full border border-white/30 bg-black/40 px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-white/88 backdrop-blur transition-colors hover:border-white/60 hover:bg-black/55 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    adicionar texto
+                  </button>
+                ) : (
+                  <div className="w-[252px] rounded-2xl border border-white/15 bg-[#0b0f18]/93 p-3 shadow-[0_16px_34px_rgba(0,0,0,0.45)] backdrop-blur">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-white/65">Texto nas costas</p>
+                    <input
+                      ref={quickBackTextInputRef}
+                      value={backText}
+                      onChange={(event) => handleBackTextChange(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          handleConfirmQuickBackTextEditor();
+                        }
+                      }}
+                      placeholder="Ex: TEAM MARUK"
+                      maxLength={MAX_BACK_TEXT_CHARS}
+                      className="mt-2 w-full rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/55"
+                    />
+                    <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-white/60">Cor do texto</p>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {STAMP_COLORS.map((color) => (
+                        <button
+                          key={`quick-back-text-color-${color.id}`}
+                          type="button"
+                          aria-label={color.label}
+                          onClick={() => setBackTextColor(color.value)}
+                          className={`h-5 w-5 rounded-full border ${
+                            backTextColor === color.value ? 'border-white/85' : 'border-white/30 hover:border-white/60'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-[10px] text-white/55">
+                      <span>{backText.length}/{MAX_BACK_TEXT_CHARS}</span>
+                      <button
+                        type="button"
+                        onClick={handleConfirmQuickBackTextEditor}
+                        className="rounded-md border border-emerald-300/55 bg-emerald-500/18 px-2.5 py-1 font-mono uppercase tracking-[0.1em] text-emerald-100 hover:bg-emerald-500/24"
+                      >
+                        ok
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {modelState.status !== 'ready' ? (
@@ -1320,7 +1968,7 @@ const TshirtLab = () => {
                   </div>
                 </div>
 
-                <div className={`${stampId === 'none' ? 'opacity-45' : 'opacity-100'}`}>
+                <div className={`${stampId === 'none' || !stampColorCustomizable ? 'opacity-45' : 'opacity-100'}`}>
                   <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-white/45">Cor da Estampa</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {STAMP_COLORS.map((color) => (
@@ -1329,12 +1977,15 @@ const TshirtLab = () => {
                         type="button"
                         onClick={() => setStampColor(color.value)}
                         aria-label={color.label}
-                        disabled={stampId === 'none'}
+                        disabled={stampId === 'none' || !stampColorCustomizable}
                         className={`h-6 w-6 rounded-full border ${stampColor === color.value ? 'border-white/80' : 'border-white/25 hover:border-white/50'} disabled:cursor-not-allowed`}
                         style={{ backgroundColor: color.value }}
                       />
                     ))}
                   </div>
+                  {stampId !== 'none' && !stampColorCustomizable ? (
+                    <p className="mt-2 text-[10px] text-white/50">Estampa colorida fixa: usando cores originais.</p>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -1486,6 +2137,23 @@ const TshirtLab = () => {
                               >
                                 {font.label}
                               </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-[11px] text-white/55">Cor do texto</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {STAMP_COLORS.map((color) => (
+                              <button
+                                key={`back-text-color-step-${color.id}`}
+                                type="button"
+                                aria-label={color.label}
+                                onClick={() => setBackTextColor(color.value)}
+                                className={`h-5 w-5 rounded-full border ${
+                                  backTextColor === color.value ? 'border-white/85' : 'border-white/25 hover:border-white/50'
+                                }`}
+                                style={{ backgroundColor: color.value }}
+                              />
                             ))}
                           </div>
                         </div>
@@ -1687,7 +2355,7 @@ const TshirtLab = () => {
                 >
                   {stamp.textureUrl ? (
                     <img
-                      src={stamp.textureUrl}
+                      src={stamp.thumbnailUrl ?? stamp.textureUrl}
                       alt={stamp.label}
                       loading="lazy"
                       className="h-20 w-full rounded-lg bg-black/25 object-contain p-1 sm:h-24"

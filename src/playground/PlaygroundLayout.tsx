@@ -1,7 +1,9 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Beaker } from 'lucide-react';
+import { useLanguage } from '../i18n/useLanguage';
 
 export const PlaygroundLayout = () => {
+  const { t } = useLanguage();
   const location = useLocation();
   const isIndex = location.pathname === '/playground';
 
@@ -17,7 +19,7 @@ export const PlaygroundLayout = () => {
               className="flex items-center gap-2 text-xs font-mono text-white/40 hover:text-white/80 transition-colors"
             >
               <ArrowLeft size={14} />
-              <span>portfolio</span>
+              <span>{t.playground.layout.backToPortfolio}</span>
             </Link>
 
             <div className="w-[1px] h-4 bg-white/10" />
@@ -28,7 +30,7 @@ export const PlaygroundLayout = () => {
               className="flex items-center gap-2 text-sm font-mono text-white/80 hover:text-white transition-colors"
             >
               <Beaker size={16} strokeWidth={1.5} />
-              <span className="font-semibold tracking-tight">playground</span>
+              <span className="font-semibold tracking-tight">{t.playground.layout.brand}</span>
             </Link>
           </div>
 
@@ -36,7 +38,7 @@ export const PlaygroundLayout = () => {
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 animate-pulse" />
             <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
-              experimental
+              {t.playground.layout.status}
             </span>
           </div>
         </div>

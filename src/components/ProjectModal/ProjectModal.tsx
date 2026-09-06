@@ -82,21 +82,19 @@ export function ProjectModal() {
           <motion.div
             key={selectedProject.id}
             ref={modalRef}
-            className="project-modal-container fixed inset-0 z-[100] h-screen w-screen overflow-y-auto bg-[#080808]/95 text-[#ededed] backdrop-blur-sm"
+            className="project-modal-container fixed inset-0 z-[100] h-screen w-screen overflow-x-hidden overflow-y-auto bg-[#080808]/95 text-[#ededed] backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
           >
-            {currentCategory !== 'motion' && currentCategory !== '3d' && (
-              <button
-                onClick={closeProject}
-                className="fixed right-4 top-4 z-[120] inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/45 px-4 py-2 text-[11px] font-mono uppercase tracking-[0.2em] text-white/72 shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:border-cyan-100/35 hover:text-white sm:right-6 sm:top-6"
-                aria-label="Voltar"
-              >
-                <span>Voltar</span>
-              </button>
-            )}
+            <button
+              onClick={closeProject}
+              className="fixed right-4 top-4 z-[220] inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/55 px-4 py-2 text-[11px] font-mono uppercase tracking-[0.2em] text-white/78 shadow-[0_12px_30px_rgba(0,0,0,0.28)] backdrop-blur-md transition hover:border-cyan-100/35 hover:text-white sm:right-6 sm:top-6"
+              aria-label="Voltar"
+            >
+              <span>Voltar</span>
+            </button>
 
             {renderLayout()}
           </motion.div>

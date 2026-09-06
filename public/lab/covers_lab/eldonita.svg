@@ -1,0 +1,33 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" fill="#03101A"/>
+  <circle cx="822" cy="336" r="276" stroke="#4F84DF" stroke-opacity=".18"/>
+  <circle cx="822" cy="336" r="214" stroke="#fff" stroke-opacity=".13" stroke-dasharray="2 10"/>
+  <circle cx="822" cy="336" r="144" stroke="#6FC256" stroke-opacity=".25"/>
+  <path d="M709 236a150 150 0 0 1 164-34" stroke="#3F83EE" stroke-width="18"/>
+  <path d="M675 336a150 150 0 0 1 51-113" stroke="#B5BDC7" stroke-width="18"/>
+  <path d="M893 230a150 150 0 0 1 79 130" stroke="#3F83EE" stroke-width="18"/>
+  <path d="M758 326a74 74 0 0 1 126-52" stroke="#6FC256" stroke-width="14"/>
+  <path d="M890 399a74 74 0 0 1-83 14" stroke="#6FC256" stroke-width="14"/>
+  <circle cx="686" cy="446" r="14" fill="#3F83EE"/>
+  <circle cx="931" cy="238" r="14" fill="#6FC256"/>
+  <g opacity=".2" stroke="#fff">
+    <path d="M0 124h245l64-64h74"/>
+    <path d="M78 620h340l72-72h248"/>
+    <path d="M960 64h182l58-58"/>
+    <path d="M1015 596h153"/>
+  </g>
+  <g opacity=".18">
+    <path d="M0 0h1200v720H0z" fill="url(#grid)"/>
+  </g>
+  <text x="82" y="215" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="84" font-weight="700" letter-spacing="16">ELDONITA</text>
+  <text x="88" y="270" fill="#fff" fill-opacity=".62" font-family="Inter, Arial, sans-serif" font-size="24" letter-spacing="22">INTELIGENCIA</text>
+  <text x="84" y="392" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="300">Inteligencia que transforma</text>
+  <text x="84" y="452" fill="#fff" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="300">informacao em decisao</text>
+  <rect x="84" y="488" width="54" height="5" fill="#6FC256"/>
+  <text x="84" y="548" fill="#fff" fill-opacity=".58" font-family="Inter, Arial, sans-serif" font-size="22">Tecnologia, analise e estrategia para conectar dados.</text>
+  <defs>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse">
+      <path d="M38 0H0v38" stroke="#fff" stroke-opacity=".22"/>
+    </pattern>
+  </defs>
+</svg>
