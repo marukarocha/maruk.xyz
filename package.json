@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --open",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/fetch-lfs-assets.mjs && tsc -b && vite build",
     "build:optimized": "npm run build && python3 scripts/optimize-images.py --remove-originals",
     "deploy:ftp": "npm run build && python3 scripts/deploy-ftp.py",
     "deploy:ftp:optimized": "npm run build:optimized && python3 scripts/deploy-ftp.py",
