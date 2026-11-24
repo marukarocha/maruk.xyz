@@ -65,9 +65,8 @@ function App() {
   return (
     <Routes>
       {/* Portfolio */}
-      <Route path="/" element={<Portfolio />} />
+      <Route path="/" element={<ConversionHomePage />} />
       <Route path="/portfolio" element={<Portfolio />} />
-      <Route path="/conversao" element={<ConversionHomePage />} />
       <Route path="/perfil" element={<RecruiterProfilePage />} />
       <Route path="/cv" element={<RecruiterProfilePage />} />
       <Route path="/consultoria-informatica" element={<TechConsultingPage />} />
