@@ -1835,7 +1835,7 @@ const TshirtLab = () => {
                   backTextFocusActive={quickBackTextEditorOpen}
                 />
                 <ContactShadows position={[0, -1.01, 0]} scale={3.8} blur={3.6} opacity={0.16} far={2.25} />
-                <Environment preset="studio" />
+                <Environment files={`${import.meta.env.BASE_URL}hdri/studio_small_03_1k.hdr`} />
                 <OrbitControls
                   ref={controlsRef}
                   enablePan={false}

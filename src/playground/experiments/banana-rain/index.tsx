@@ -86,7 +86,7 @@ const BananaRain = () => {
         {Array.from({ length: count }, (_, i) => (
           <Banana key={i} index={i} z={Math.round(easing(i / count) * depth)} speed={speed} />
         ))}
-        <Environment preset="sunset" />
+        <Environment files={`${import.meta.env.BASE_URL}hdri/venice_sunset_1k.hdr`} />
         <EffectComposer enableNormalPass={false} multisampling={0}>
           <DepthOfField target={[0, 0, 10]} focalLength={0.05} bokehScale={3} height={480} />
           <ToneMapping />

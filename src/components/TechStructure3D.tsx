@@ -304,7 +304,7 @@ export const TechStructure3D = forwardRef(({ scale, rotation = DEFAULT_ROTATION 
           <TechModel ref={ref} url={MODEL_URL} scale={scale} rotation={rotation} />
           
           <ContactShadows position={[0, -1.5, 0]} opacity={0.4} scale={10} blur={2.5} far={4} />
-          <Environment preset="night" /> 
+          <Environment files={`${import.meta.env.BASE_URL}hdri/dikhololo_night_1k.hdr`} />
           
           <CameraController />
         </Suspense>

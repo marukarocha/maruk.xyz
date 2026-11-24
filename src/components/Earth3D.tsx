@@ -62,7 +62,7 @@ const Earth3D = () => {
           <ambientLight intensity={0.5} />
           <directionalLight position={[10, 10, 5]} intensity={1} />
           <spotLight position={[-10, -10, -5]} intensity={0.5} />
-          <Environment preset="city" />
+          <Environment files={`${import.meta.env.BASE_URL}hdri/potsdamer_platz_1k.hdr`} />
           
           <EarthModel url="/3d/lowpoly_earth.glb" />
         </Suspense>
