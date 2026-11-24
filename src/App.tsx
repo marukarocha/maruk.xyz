@@ -18,10 +18,7 @@ import { ExperimentView } from './playground/ExperimentView';
 import { TechConsultingPage } from './pages/TechConsultingPage';
 import { RecruiterProfilePage } from './pages/RecruiterProfilePage';
 import { LoginPage } from './pages/LoginPage';
-import { PlaygroundLoginPage } from './pages/PlaygroundLoginPage';
 import { ConversionHomePage } from './pages/ConversionHomePage';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { PROTECTED_PLAYGROUND_IDS } from './playground/auth';
 
 // Portfolio — the main site
 const Portfolio = () => {
@@ -79,17 +76,7 @@ function App() {
       {/* Playground */}
       <Route path="/playground" element={<PlaygroundLayout />}>
         <Route index element={<PlaygroundIndex />} />
-        <Route path=":id/login" element={<PlaygroundLoginPage />} />
-        <Route
-          path=":id/*"
-          element={
-            <ProtectedRoute
-              allowedPaths={[...PROTECTED_PLAYGROUND_IDS]}
-            >
-              <ExperimentView />
-            </ProtectedRoute>
-          }
-        />
+        <Route path=":id/*" element={<ExperimentView />} />
       </Route>
     </Routes>
   );
