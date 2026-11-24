@@ -535,7 +535,7 @@ const PDVShowcase = () => {
       });
 
     loader.load(
-      '/3d/PDVII.glb',
+      `${import.meta.env.BASE_URL}3d/PDVII.glb`,
       (gltf) => {
         const model = gltf.scene;
         model.rotation.y = MODEL_ROTATION_Y;

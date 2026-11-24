@@ -52,7 +52,7 @@ const projectsByCategory: Record<string, Project[]> = {
       id: 'motodiario',
       title: motodiarioProject?.title || 'Moto Diário',
       description: motodiarioProject?.shortDescription || 'Plataforma PWA para motociclistas com rotas offline e gestão de manutenção.',
-      image: motodiarioProject?.images.hero || '/images/motodiario-hero.jpg',
+      image: motodiarioProject?.images.hero || `${import.meta.env.BASE_URL}images/motodiario-hero.jpg`,
       media: motodiarioProject?.images.gallery || [],
       tech: motodiarioProject?.techStack?.slice(0, 4) || ['React', 'Mapbox', 'PWA', 'Supabase'],
       projectId: 'motodiario'
@@ -101,7 +101,7 @@ const projectsByCategory: Record<string, Project[]> = {
       id: 'pdv-showcase',
       title: pdvShowcaseProject?.title || 'PDV Spatial Showcase',
       description: pdvShowcaseProject?.shortDescription || 'Cena 3D com hotspots, camera tour e narrativa visual para apresentar produto com atmosfera e contexto.',
-      image: pdvShowcaseProject?.images.hero || '/port/pdv-showcase/hero-poster.svg',
+      image: pdvShowcaseProject?.images.hero || `${import.meta.env.BASE_URL}port/pdv-showcase/hero-poster.svg`,
       media: pdvShowcaseProject?.images.gallery || [],
       tech: pdvShowcaseProject?.techStack?.slice(0, 4) || ['Three.js', 'GSAP', 'Spatial UI', 'GLTF'],
       projectId: 'pdv-showcase'
@@ -110,7 +110,7 @@ const projectsByCategory: Record<string, Project[]> = {
       id: 302,
       title: 'Interactive 3D Product System',
       description: 'Sistema visual para demonstrar produto, interface e storytelling em uma mesma experiencia com scroll, camera e camadas editoriais.',
-      image: '/port/pdv-showcase/camera-poster.svg',
+      image: `${import.meta.env.BASE_URL}port/pdv-showcase/camera-poster.svg`,
       tech: ['Three.js', 'ScrollTrigger', 'TypeScript', 'Motion'],
       github: '#',
       demo: '#'

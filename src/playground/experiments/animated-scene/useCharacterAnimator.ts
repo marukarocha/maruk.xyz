@@ -177,7 +177,7 @@ export function useCharacterAnimator() {
     const loader = new GLTFLoader();
 
     loader.load(
-      '/3d/character.glb',
+      `${import.meta.env.BASE_URL}3d/character.glb`,
       (gltf) => {
         const obj = gltf.scene;
 

@@ -40,7 +40,7 @@ type VisualAsset = {
   resolution?: string;
 };
 
-const assetSrc = (path: string) => encodeURI(path);
+const assetSrc = (path: string) => encodeURI(`${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`);
 
 function shuffleAssets<T>(items: T[]) {
   const shuffled = [...items];

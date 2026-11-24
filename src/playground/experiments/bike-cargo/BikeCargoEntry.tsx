@@ -14,8 +14,8 @@ type BootAsset = {
 };
 
 const BIKE_CARGO_BOOT_ASSETS: BootAsset[] = [
-  { category: '3d', label: 'bike.glb', url: '/3d/bike.glb' },
-  { category: '3d', label: 'dog-lowpolly.glb', url: '/3d/dog-lowpolly.glb' },
+  { category: '3d', label: 'bike.glb', url: `${import.meta.env.BASE_URL}3d/bike.glb` },
+  { category: '3d', label: 'dog-lowpolly.glb', url: `${import.meta.env.BASE_URL}3d/dog-lowpolly.glb` },
   { category: 'branding', label: 'orangecargo.png', url: ORANGE_CARGO_LOGO_URL },
   { category: 'images', label: 'gallery-01.webp', url: '/lab/bike/gallery/01.webp' },
   { category: 'images', label: 'gallery-02.webp', url: '/lab/bike/gallery/02.webp' },

@@ -64,7 +64,7 @@ const Earth3D = () => {
           <spotLight position={[-10, -10, -5]} intensity={0.5} />
           <Environment files={`${import.meta.env.BASE_URL}hdri/potsdamer_platz_1k.hdr`} />
           
-          <EarthModel url="/3d/lowpoly_earth.glb" />
+          <EarthModel url={`${import.meta.env.BASE_URL}3d/lowpoly_earth.glb`} />
         </Suspense>
       </Canvas>
     </div>
@@ -74,4 +74,4 @@ const Earth3D = () => {
 export default Earth3D;
 
 // Preload the model
-useGLTF.preload('/3d/lowpoly_earth.glb');
+useGLTF.preload(`${import.meta.env.BASE_URL}3d/lowpoly_earth.glb`);

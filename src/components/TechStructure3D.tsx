@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Configuration
 const DEFAULT_SCALE = 12; // Aumentado para preencher mais e impor presença
-const MODEL_URL = "/3d/tvs.glb"; 
+const MODEL_URL = `${import.meta.env.BASE_URL}3d/tvs.glb`; 
 const DEFAULT_ROTATION: [number, number, number] = [0, 0, 0];
 
 // Hologram Shader (converted from TSL to GLSL)

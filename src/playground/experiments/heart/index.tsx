@@ -567,7 +567,7 @@ const DrinksExperience = () => {
     const loader = new GLTFLoader();
 
     loader.load(
-      '/3d/energy_drinks.glb',
+      `${import.meta.env.BASE_URL}3d/energy_drinks.glb`,
       (gltf) => {
         const obj = gltf.scene;
 

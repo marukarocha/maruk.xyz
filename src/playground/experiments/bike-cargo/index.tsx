@@ -80,7 +80,7 @@ const BIKE_GALLERY_ENDCAP = {
   title: 'CADA ENTREGA VIRA CENA',
   body: 'No fechamento, o produto deixa de ser só transporte e passa a ser presença. A composição mistura utilidade, memória e pequenos rituais urbanos em uma leitura mais emocional do uso real.',
 };
-const BIKE_MODEL_URL = '/3d/bike.glb';
+const BIKE_MODEL_URL = `${import.meta.env.BASE_URL}3d/bike.glb`;
 const BIKE_BOOT_ASSET_URLS = Array.from(
   new Set([
     BIKE_MODEL_URL,
@@ -683,7 +683,7 @@ const OrangeBikeExperiment = ({ externalLoader = false, onSceneReady }: OrangeBi
     const dogLoader = new GLTFLoader();
 
     dogLoader.load(
-      '/3d/dog-lowpolly.glb',
+      `${import.meta.env.BASE_URL}3d/dog-lowpolly.glb`,
       (dogGltf) => {
         const dog = dogGltf.scene;
         dog.traverse((object) => {

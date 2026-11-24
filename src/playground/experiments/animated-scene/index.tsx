@@ -463,7 +463,7 @@ const AnimatedScene = () => {
 
     // ── Load Scene (Animated.glb) ──
     loader.load(
-      '/3d/Animated.glb',
+      `${import.meta.env.BASE_URL}3d/Animated.glb`,
       (gltf) => {
         const obj = gltf.scene;
 

@@ -28,7 +28,7 @@ function Banana({ index, z, speed }: { index: number; z: number; speed: number }
   const ref = useRef<THREE.LOD>(null);
   const { viewport, camera } = useThree();
   const { width, height } = viewport.getCurrentViewport(camera, [0, 0, -z]);
-  const { nodes, materials } = useGLTF('/3d/banana-v1-transformed.glb') as unknown as BananaGLTF;
+  const { nodes, materials } = useGLTF(`${import.meta.env.BASE_URL}3d/banana-v1-transformed.glb`) as unknown as BananaGLTF;
 
   const [data] = useState<BananaData>({
     y: THREE.MathUtils.randFloatSpread(height * 2),
