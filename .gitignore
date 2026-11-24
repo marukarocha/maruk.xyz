@@ -27,3 +27,6 @@ dist-ssr
 *.crdownload
 __pycache__/
 *.py[cod]
+
+# temp debugging scripts
+.tmp-*
