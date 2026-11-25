@@ -19,6 +19,7 @@ import { TechConsultingPage } from './pages/TechConsultingPage';
 import { RecruiterProfilePage } from './pages/RecruiterProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { PersonalPortfolioPage } from './pages/PersonalPortfolioPage';
+import { ProjectPage } from './pages/ProjectPage';
 
 // Portfolio — the main site
 const Portfolio = () => {
@@ -67,6 +68,7 @@ function App() {
       {/* Portfolio */}
       <Route path="/" element={<Portfolio />} />
       <Route path="/portfolio" element={<PersonalPortfolioPage />} />
+      <Route path="/portfolio/:id" element={<ProjectPage />} />
       <Route path="/perfil" element={<RecruiterProfilePage />} />
       <Route path="/cv" element={<RecruiterProfilePage />} />
       <Route path="/consultoria-informatica" element={<TechConsultingPage />} />

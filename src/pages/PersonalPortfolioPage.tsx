@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowDown,
@@ -10,8 +10,11 @@ import {
   Instagram,
   Mail,
 } from 'lucide-react';
+import gsap from 'gsap';
 import { ImageLightbox, type LightboxImage } from '../components/ImageLightbox';
-import { ProjectCaseModal, type ProjectCase } from '../components/ProjectCaseModal';
+import { useReveal } from '../hooks/useReveal';
+import { caseStudies } from '../data/portfolioCases';
+import type { ProjectCase } from '../types/portfolio';
 
 const contactHref = 'mailto:maruk.xyz@gmail.com?subject=Oportunidade%20profissional';
 
@@ -38,104 +41,29 @@ const marqueeItems = [
   'Branding',
 ];
 
-const caseStudies: ProjectCase[] = [
+type ThreeDImage = { kind: 'image'; src: string; title: string; ratio: string };
+type ThreeDText = { kind: 'text'; title: string; text: string };
+
+const threeDItems: Array<ThreeDImage | ThreeDText> = [
   {
-    id: 'motodiario',
-    name: 'Motodiario.app',
-    category: 'Product / Full Stack',
-    role: 'Founder · Full Stack Developer · Designer',
-    summary:
-      'Plataforma própria em produção para gestão de ganhos, abastecimentos, manutenção, quilometragem e metas de motoboys.',
-    problem:
-      'Organizar a rotina financeira e operacional de profissionais que trabalham na rua, com dados espalhados.',
-    steps: [
-      'Arquitetura do produto e evolução contínua desde o zero.',
-      'Interface e fluxos mobile-first, do cadastro ao acompanhamento.',
-      'Autenticação, banco de dados e integrações via Firebase e APIs REST.',
-      'Metas, manutenção, quilometragem, mapa de calor e modo compacto.',
-    ],
-    result: 'Produto web completo em produção, evoluindo de forma contínua.',
-    tech: ['React', 'Next.js', 'TypeScript', 'Tailwind', 'Firebase', 'APIs REST', 'PWA'],
-    url: 'https://www.motodiario.app/',
-    urlLabel: 'Ver produto',
-    gallery: [
-      { src: '/port/motodiario/telas/motodiario_financeiro_completro_scrool.jpeg', caption: 'Financeiro' },
-      { src: '/port/motodiario/telas/motodiario_combustivel.jpeg', caption: 'Abastecimentos' },
-      { src: '/port/motodiario/telas/motodiario_manutencoes.jpeg', caption: 'Manutenções' },
-      { src: '/port/motodiario/telas/motodiario_mapadecalor_gps.jpeg', caption: 'Mapa de calor' },
-      { src: '/port/motodiario/telas/motodiario_compactmode.jpeg', caption: 'Modo compacto' },
-    ],
+    kind: 'text' as const,
+    title: 'Forma, luz e matéria.',
+    text: 'Peças que nascem como estudo e viram produto, personagem ou ambiente. Modelagem, cena e direção visual.',
   },
+  { kind: 'image' as const, src: '/port/3d/Craby-22.webp', title: 'Craby-22', ratio: 'aspect-[4/5]' },
+  { kind: 'image' as const, src: '/port/3d/Dragon.webp', title: 'Dragon', ratio: 'aspect-square' },
+  { kind: 'image' as const, src: '/port/3d/KOMBI.webp', title: 'Kombi', ratio: 'aspect-[4/5]' },
   {
-    id: 'pedalhe',
-    name: 'Pedalhe',
-    category: 'E-commerce / WordPress',
-    role: 'Tema e plugins próprios · Integrações',
-    summary:
-      'E-commerce de roupas técnicas para ciclismo em WordPress/WooCommerce, com tema e plugins próprios, regras personalizadas de carrinho e integração independente de pagamento via PIX.',
-    problem:
-      'Transformar catálogo, checkout e pagamento em uma operação de venda funcional, sem depender de plugins prontos que não cobriam as regras da loja.',
-    steps: [
-      'Tema próprio: catálogo, página de produto, institucional e landing pages da marca.',
-      'Plugin de regras de carrinho: condições e personalizações além do padrão do WooCommerce.',
-      'Plugin de pagamento PIX: integração independente, com geração de cobrança e confirmação de status.',
-      'Tipos de conteúdo e campos personalizados (ACF/CPTs) para catálogo e comunicação.',
-      'Landing page de campanha (NaChuva) dentro do mesmo tema e plugins da marca.',
-    ],
-    result: 'Loja sob medida, com personalizações que passam do visual para a regra de negócio.',
-    tech: ['WordPress', 'WooCommerce', 'PHP', 'JavaScript', 'API PIX', 'ACF', 'CPTs'],
-    gallery: [
-      { src: '/portfolio/pedalhe/home.webp', caption: 'Home' },
-      { src: '/portfolio/pedalhe/shop.webp', caption: 'Catálogo' },
-      { src: '/portfolio/pedalhe/produto.webp', caption: 'Produto' },
-      { src: '/portfolio/pedalhe/manifesto.webp', caption: 'Manifesto' },
-      { src: '/portfolio/pedalhe/nachuva.webp', caption: 'Landing NaChuva' },
-    ],
+    kind: 'text' as const,
+    title: 'Três dimensões, um processo.',
+    text: 'Blockout, material, câmera e luz. O mesmo olhar que aplico em interfaces, marcas e produtos.',
   },
-  {
-    id: 'unitv',
-    name: 'UNITV',
-    category: 'Portal / WordPress',
-    role: 'Desenvolvimento e manutenção',
-    summary:
-      'Portal de notícias em WordPress no ar há mais de 5 anos, com mais de 5 mil publicações e rotina editorial contínua.',
-    steps: [
-      'Portal de notícias com tema e estrutura editorial em WordPress.',
-      'Categorias, matérias, mídia e publicação contínua.',
-      'Manutenção e evolução ao longo de mais de 5 anos.',
-    ],
-    tech: ['WordPress', 'PHP', 'Tema', 'Portal de notícias'],
-    url: 'https://www.unitv.com.br/',
-    urlLabel: 'Ver portal',
-    gallery: [{ src: '/portfolio/unitv/home.webp', caption: 'Portal UNITV' }],
-  },
-  {
-    id: 'vertica',
-    name: 'Vertica 3D',
-    category: 'Marca / Web',
-    role: 'Identidade visual e interface',
-    summary:
-      'Site e identidade visual da Vertica 3D — impressão 3D com a ideia de que "ideias ganham forma". Criação da marca e da direção visual da página.',
-    steps: [
-      'Identidade e direção visual da marca.',
-      'Layout e interface do site.',
-      'Seções de produto, processo e contato.',
-    ],
-    tech: ['Branding', 'Identidade visual', 'UI', 'Web'],
-    url: 'https://vertica3d.vercel.app/',
-    urlLabel: 'Ver site',
-    gallery: [{ src: '/portfolio/vertica/home.webp', caption: 'Vertica 3D' }],
-  },
+  { kind: 'image' as const, src: '/port/3d/monkey.webp', title: 'Monkey', ratio: 'aspect-square' },
+  { kind: 'image' as const, src: '/port/3d/maquete1.webp', title: 'Maquete', ratio: 'aspect-[4/5]' },
+  { kind: 'image' as const, src: '/port/3d/Maquete Laundex2.webp', title: 'Laundex', ratio: 'aspect-square' },
 ];
 
-const threeDWorks = [
-  { src: '/port/3d/Craby-22.webp', title: 'Craby-22' },
-  { src: '/port/3d/Dragon.webp', title: 'Dragon' },
-  { src: '/port/3d/KOMBI.webp', title: 'Kombi' },
-  { src: '/port/3d/monkey.webp', title: 'Monkey' },
-  { src: '/port/3d/maquete1.webp', title: 'Maquete' },
-  { src: '/port/3d/Maquete Laundex2.webp', title: 'Laundex' },
-];
+const threeDImages = threeDItems.filter((item): item is ThreeDImage => item.kind === 'image');
 
 const videoReels = [
   { title: 'E-ouv Gov. Federal', url: 'https://vimeo.com/801965062' },
@@ -250,9 +178,15 @@ const SectionHead = ({
   </div>
 );
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export const PersonalPortfolioPage = () => {
-  const [activeProject, setActiveProject] = useState<ProjectCase | null>(null);
+  const [hovered, setHovered] = useState<ProjectCase | null>(null);
   const [lightbox, setLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const revealRef = useReveal<HTMLElement>();
 
   useEffect(() => {
     document.title = 'Portfólio | Maruk.xyz — Full Stack Developer & Creative Technologist';
@@ -269,7 +203,31 @@ export const PersonalPortfolioPage = () => {
     );
   }, []);
 
+  useLayoutEffect(() => {
+    const root = heroRef.current;
+    if (!root || prefersReducedMotion()) return;
+
+    const ctx = gsap.context(() => {
+      gsap
+        .timeline({ defaults: { ease: 'power3.out' } })
+        .from('[data-hero]', { y: 28, opacity: 0, duration: 0.9, stagger: 0.08 })
+        .from('[data-index-row]', { x: 16, opacity: 0, duration: 0.45, stagger: 0.05 }, '-=0.65');
+    }, root);
+
+    return () => ctx.revert();
+  }, []);
+
   const openLightbox = (images: LightboxImage[], index: number) => setLightbox({ images, index });
+
+  const handleProjectsMouseMove = (event: MouseEvent<HTMLDivElement>) => {
+    const element = previewRef.current;
+    if (!element) return;
+    const width = 300;
+    const pad = 24;
+    const x = Math.min(event.clientX + pad, window.innerWidth - width - pad);
+    const y = Math.min(Math.max(event.clientY - 120, pad + 56), window.innerHeight - 270);
+    element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#ededed] selection:bg-[#00ffcc] selection:text-black">
@@ -280,13 +238,9 @@ export const PersonalPortfolioPage = () => {
           <Link to="/" className="font-mono text-[0.7rem] uppercase tracking-[0.32em] text-white/80">
             maruk.xyz
           </Link>
-          <nav className="hidden items-center gap-6 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-white/40 lg:flex">
-            <a className="transition-colors hover:text-[#00ffcc]" href="#faco">01 O que faço</a>
-            <a className="transition-colors hover:text-[#00ffcc]" href="#projetos">03 Projetos</a>
-            <a className="transition-colors hover:text-[#00ffcc]" href="#tresd">04 3D</a>
-            <a className="transition-colors hover:text-[#00ffcc]" href="#video">05 Vídeo</a>
-            <a className="transition-colors hover:text-[#00ffcc]" href="#contato">08 Contato</a>
-          </nav>
+          <p className="hidden font-mono text-[0.55rem] uppercase tracking-[0.22em] text-white/25 md:block">
+            Portfólio · 2009 — 2026
+          </p>
           <Link
             to="/cv"
             viewTransition
@@ -298,23 +252,26 @@ export const PersonalPortfolioPage = () => {
         </div>
       </header>
 
-      <main className="relative z-10">
+      <main ref={revealRef} className="relative z-10">
         {/* HERO */}
         <section id="top" className="mx-auto max-w-[1200px] px-4 pb-14 pt-28 sm:px-6 sm:pt-32">
-          <div className="grid gap-12 lg:grid-cols-12">
+          <div ref={heroRef} className="grid gap-12 lg:grid-cols-12">
             <div className="lg:col-span-7">
-              <p className="font-mono text-[0.62rem] uppercase tracking-[0.3em] text-[#00ffcc]/80">
+              <p data-hero className="font-mono text-[0.62rem] uppercase tracking-[0.3em] text-[#00ffcc]/80">
                 Portfólio · 2009 — 2026
               </p>
-              <h1 className="mt-6 text-[2.7rem] font-semibold leading-[0.97] tracking-tight text-[#ededed] sm:text-6xl lg:text-[4.6rem]">
+              <h1
+                data-hero
+                className="mt-6 text-[2.7rem] font-semibold leading-[0.97] tracking-tight text-[#ededed] sm:text-6xl lg:text-[4.6rem]"
+              >
                 Desenvolvedor Full Stack e{' '}
                 <span className="font-serif italic font-normal text-[#00ffcc]">Creative Technologist</span>.
               </h1>
-              <p className="mt-8 max-w-xl text-base leading-8 text-white/60 md:text-lg">
+              <p data-hero className="mt-8 max-w-xl text-base leading-8 text-white/60 md:text-lg">
                 Mais de 20 anos construindo web, produto e imagem: front-end, WordPress/WooCommerce,
                 integrações e experiências 3D. Do briefing à entrega, com foco em resolver problemas reais.
               </p>
-              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <div data-hero className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <a
                   href="#projetos"
                   className="group inline-flex items-center gap-3 border-b border-white/30 pb-2 font-mono text-[0.64rem] uppercase tracking-[0.2em] text-white transition-colors hover:border-[#00ffcc] hover:text-[#00ffcc]"
@@ -338,7 +295,7 @@ export const PersonalPortfolioPage = () => {
                   <Mail size={12} />
                 </a>
               </div>
-              <dl className="mt-12 grid max-w-lg grid-cols-3 gap-4 border-t border-white/10 pt-6 font-mono text-[0.58rem] uppercase tracking-[0.16em]">
+              <dl data-hero className="mt-12 grid max-w-lg grid-cols-3 gap-4 border-t border-white/10 pt-6 font-mono text-[0.58rem] uppercase tracking-[0.16em]">
                 <div>
                   <dt className="text-white/30">Base</dt>
                   <dd className="mt-1 text-white/70">Brasil · remoto</dd>
@@ -361,7 +318,7 @@ export const PersonalPortfolioPage = () => {
                 </p>
                 <ol>
                   {navSections.map((section) => (
-                    <li key={section.href}>
+                    <li key={section.href} data-index-row>
                       <a
                         href={section.href}
                         className="group flex items-baseline gap-4 border-b border-white/[0.06] px-4 py-3 transition-colors last:border-b-0 hover:bg-white/[0.03]"
@@ -376,9 +333,7 @@ export const PersonalPortfolioPage = () => {
                   ))}
                 </ol>
                 <div className="border-t border-white/10 p-4">
-                  <p className="text-xs leading-6 text-white/40">
-                    Aberto a vagas CLT/PJ e a projetos sob demanda.
-                  </p>
+                  <p className="text-xs leading-6 text-white/40">Aberto a vagas CLT/PJ e a projetos sob demanda.</p>
                   <a
                     href={contactHref}
                     className="mt-2 inline-block font-mono text-[0.58rem] uppercase tracking-[0.16em] text-[#00ffcc] transition-colors hover:text-white"
@@ -405,7 +360,7 @@ export const PersonalPortfolioPage = () => {
 
         {/* 01 O QUE EU FAÇO */}
         <section id="faco" className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHead index="01" label="O que eu faço" title="Do front-end ao 3D, com critério de produto.">
+          <SectionHead index="01" label="O que eu faço" title="Do código à imagem.">
             <p className="max-w-xs text-xs leading-6 text-white/40">
               Seis frentes que se conectam no dia a dia — interface, loja, integração, imagem e processo.
             </p>
@@ -414,10 +369,13 @@ export const PersonalPortfolioPage = () => {
             {practice.map((item, index) => (
               <div
                 key={item.title}
-                className="grid gap-3 border-b border-white/10 py-6 md:grid-cols-[48px_1fr_1.3fr] md:gap-8"
+                data-reveal
+                className="group grid gap-3 border-b border-white/10 py-6 md:grid-cols-[48px_1fr_1.3fr] md:gap-8"
               >
                 <span className="font-mono text-[0.6rem] text-white/25">0{index + 1}</span>
-                <h3 className="text-xl font-medium tracking-tight text-white md:text-2xl">{item.title}</h3>
+                <h3 className="text-xl font-medium tracking-tight text-white transition-colors group-hover:text-[#00ffcc] md:text-2xl">
+                  {item.title}
+                </h3>
                 <div>
                   <p className="text-sm leading-7 text-white/55">{item.text}</p>
                   <p className="mt-2 font-mono text-[0.55rem] uppercase tracking-[0.14em] text-white/25">
@@ -445,6 +403,7 @@ export const PersonalPortfolioPage = () => {
             {experience.map((item) => (
               <div
                 key={item.company}
+                data-reveal
                 className="grid gap-2 border-b border-white/10 py-6 md:grid-cols-[150px_1fr_1.4fr] md:gap-8"
               >
                 <span className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-[#00ffcc]/70">
@@ -462,114 +421,125 @@ export const PersonalPortfolioPage = () => {
           </div>
         </section>
 
-        {/* 03 PROJETOS */}
+        {/* 03 PROJETOS — lista com preview flutuante */}
         <section id="projetos" className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHead index="03" label="Projetos" title="Projetos e cases.">
+          <SectionHead index="03" label="Projetos" title="Cases selecionados.">
             <p className="max-w-xs text-xs leading-6 text-white/40">
-              Produtos em produção, e-commerce, portal e landing pages. Cada case abre com as telas
-              completas.
+              Passe o mouse para ver e clique para abrir a página do projeto.
             </p>
           </SectionHead>
 
-          <div className="space-y-16">
+          <div
+            className="relative border-t border-white/10"
+            onMouseMove={handleProjectsMouseMove}
+            onMouseLeave={() => setHovered(null)}
+          >
             {caseStudies.map((project, index) => (
-              <article key={project.id} className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-                <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
-                  <p className="font-mono text-[0.58rem] uppercase tracking-[0.22em] text-[#00ffcc]/70">
-                    {String(index + 1).padStart(2, '0')} — {project.category}
-                  </p>
-                  <h3 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <Link
+                key={project.id}
+                to={`/portfolio/${project.id}`}
+                viewTransition
+                onMouseEnter={() => setHovered(project)}
+                onFocus={() => setHovered(project)}
+                className="group block border-b border-white/10"
+              >
+                <div className="grid grid-cols-[36px_1fr_auto] items-center gap-4 py-6 md:grid-cols-[48px_1.15fr_0.85fr_auto] md:py-7">
+                  <span className="font-mono text-[0.6rem] text-white/25">0{index + 1}</span>
+                  <h3 className="text-2xl font-medium tracking-tight text-white transition-all duration-300 group-hover:translate-x-1 group-hover:text-[#00ffcc] md:text-3xl">
                     {project.name}
                   </h3>
-                  <p className="mt-2 font-mono text-[0.58rem] uppercase tracking-[0.14em] text-white/35">
-                    {project.role}
+                  <p className="hidden font-mono text-[0.58rem] uppercase tracking-[0.16em] text-white/30 md:block">
+                    {project.category}
                   </p>
-                  <p className="mt-5 text-sm leading-7 text-white/60">{project.summary}</p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {project.tech.slice(0, 5).map((item) => (
-                      <span key={item} className="border border-white/10 px-2 py-1 text-[0.62rem] text-white/45">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-7 flex flex-wrap items-center gap-6">
-                    <button
-                      type="button"
-                      onClick={() => setActiveProject(project)}
-                      className="group inline-flex items-center gap-2 border-b border-[#00ffcc]/50 pb-1 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-[#00ffcc] transition-colors hover:border-[#00ffcc] hover:text-white"
-                    >
-                      Abrir case
-                      <ArrowUpRight size={13} />
-                    </button>
-                    {project.url ? (
-                      <a
-                        href={project.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-mono text-[0.58rem] uppercase tracking-[0.16em] text-white/35 transition-colors hover:text-white"
-                      >
-                        {project.urlLabel ?? 'Site'} ↗
-                      </a>
-                    ) : null}
-                  </div>
+                  <span className="flex items-center gap-3 font-mono text-[0.55rem] uppercase tracking-[0.16em] text-white/25 transition-colors group-hover:text-[#00ffcc]">
+                    <span className="hidden sm:inline">Abrir case</span>
+                    <ArrowUpRight size={15} />
+                  </span>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveProject(project)}
-                  className={`group relative h-[340px] overflow-hidden border border-white/10 bg-black text-left sm:h-[440px] ${
-                    index % 2 === 1 ? 'lg:order-1' : ''
-                  }`}
-                  aria-label={`Abrir case ${project.name}`}
-                >
+                <div className="overflow-hidden border border-white/10 lg:hidden">
                   <img
                     src={project.gallery[0]?.src}
                     alt={project.name}
                     loading="lazy"
-                    className="h-full w-full object-cover object-top opacity-80 transition duration-700 group-hover:scale-[1.02] group-hover:opacity-100"
+                    className="h-44 w-full object-cover object-top opacity-80"
                   />
-                  <span className="absolute bottom-3 left-3 inline-flex items-center gap-2 border border-white/15 bg-black/80 px-2.5 py-1.5 font-mono text-[0.52rem] uppercase tracking-[0.14em] text-white/60 backdrop-blur">
-                    <Expand size={11} />
-                    página inteira
-                  </span>
-                </button>
-              </article>
+                </div>
+                <div className="h-4 lg:block" />
+              </Link>
             ))}
+
+            {/* preview flutuante seguindo o mouse */}
+            <div
+              ref={previewRef}
+              aria-hidden="true"
+              className={`pointer-events-none fixed left-0 top-0 z-40 hidden w-[300px] transition-opacity duration-200 lg:block ${
+                hovered ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <div className="overflow-hidden border border-white/15 bg-black shadow-2xl">
+                <div className="h-[190px] overflow-hidden">
+                  <img
+                    src={hovered?.gallery[0]?.src}
+                    alt=""
+                    className="h-full w-full object-cover object-top"
+                    style={hovered ? { viewTransitionName: `project-${hovered.id}` } : undefined}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-[#0a0a0a]/95 px-3 py-2">
+                  <span className="font-mono text-[0.52rem] uppercase tracking-[0.14em] text-white/50">
+                    {hovered?.category ?? ''}
+                  </span>
+                  <span className="font-mono text-[0.52rem] uppercase tracking-[0.14em] text-[#00ffcc]">abrir ↗</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* 04 3D */}
+        {/* 04 3D — masonry com texto */}
         <section id="tresd" className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 sm:py-20">
           <SectionHead index="04" label="3D" title="Peças e estudos em 3D.">
             <p className="max-w-xs text-xs leading-6 text-white/40">
               Modelagem, cena e direção visual — clique para ampliar.
             </p>
           </SectionHead>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {threeDWorks.map((work, index) => (
-              <button
-                key={work.src}
-                type="button"
-                onClick={() =>
-                  openLightbox(
-                    threeDWorks.map((item) => ({ src: item.src, caption: item.title })),
-                    index,
-                  )
-                }
-                className="group relative aspect-[4/5] overflow-hidden border border-white/10 bg-black text-left"
-              >
-                <img
-                  src={work.src}
-                  alt={work.title}
-                  loading="lazy"
-                  className="h-full w-full object-cover opacity-85 transition duration-700 group-hover:scale-[1.03] group-hover:opacity-100"
-                />
-                <span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/85 to-transparent p-3 font-mono text-[0.55rem] uppercase tracking-[0.14em] text-white/60">
-                  <span>{work.title}</span>
-                  <Expand size={11} />
-                </span>
-              </button>
-            ))}
+          <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+            {threeDItems.map((item, index) =>
+              item.kind === 'text' ? (
+                <div
+                  key={`text-${index}`}
+                  data-reveal
+                  className="mb-4 break-inside-avoid border border-white/10 bg-white/[0.02] p-6"
+                >
+                  <p className="font-serif text-2xl italic leading-snug text-[#ededed]">{item.title}</p>
+                  <p className="mt-3 text-xs leading-6 text-white/45">{item.text}</p>
+                </div>
+              ) : (
+                <button
+                  key={item.src}
+                  type="button"
+                  data-reveal
+                  onClick={() =>
+                    openLightbox(
+                      threeDImages.map((image) => ({ src: image.src, caption: image.title })),
+                      threeDImages.findIndex((image) => image.src === item.src),
+                    )
+                  }
+                  className={`group relative mb-4 block w-full break-inside-avoid overflow-hidden border border-white/10 bg-black text-left ${item.ratio}`}
+                >
+                  <img
+                    src={item.src}
+                    alt={item.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover opacity-85 transition duration-700 group-hover:scale-[1.03] group-hover:opacity-100"
+                  />
+                  <span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/85 to-transparent p-3 font-mono text-[0.55rem] uppercase tracking-[0.14em] text-white/60">
+                    <span>{item.title}</span>
+                    <Expand size={11} />
+                  </span>
+                </button>
+              ),
+            )}
           </div>
         </section>
 
@@ -580,7 +550,7 @@ export const PersonalPortfolioPage = () => {
               Reel principal e uma seleção de trabalhos em motion, edição e arte.
             </p>
           </SectionHead>
-          <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
+          <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]" data-reveal>
             <div className="border border-white/10 bg-black">
               <div className="aspect-video">
                 <iframe
@@ -636,7 +606,7 @@ export const PersonalPortfolioPage = () => {
               Identidade visual e direção de marca em projetos próprios e de clientes.
             </p>
           </SectionHead>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
             {brands.map((brand, index) => (
               <button
                 key={brand.src}
@@ -744,11 +714,6 @@ export const PersonalPortfolioPage = () => {
         </footer>
       </main>
 
-      <ProjectCaseModal
-        project={activeProject}
-        contactHref={contactHref}
-        onClose={() => setActiveProject(null)}
-      />
 
       {lightbox ? (
         <ImageLightbox
