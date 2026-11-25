@@ -130,3 +130,44 @@
 
   /* Custom cursors are now handled by the SectionCursor React component */
 }
+
+/* ── Editorial marquee ─────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 26s linear infinite;
+  will-change: transform;
+}
+
+/* ── Page transition (barba-style wipe) via View Transitions ───── */
+@keyframes vt-wipe-in {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+::view-transition-old(root) {
+  animation: vt-fade-out 0.3s ease both;
+}
+
+::view-transition-new(root) {
+  animation: vt-wipe-in 0.55s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
