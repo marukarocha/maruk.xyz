@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ProjectCaseModal, type ProjectCase } from '../components/ProjectCaseModal';
 import {
   ArrowRight,
   ArrowUpRight,
@@ -28,28 +29,81 @@ const heroFacts = [
   { value: 'Creative', label: '3D, motion e direção visual' },
 ];
 
-const featuredProjects = [
+const caseStudies: ProjectCase[] = [
   {
+    id: 'motodiario',
     name: 'Motodiario.app',
     category: 'Product / Full Stack',
     role: 'Founder · Full Stack Developer · Designer',
-    description:
-      'Plataforma própria em produção para gestão de ganhos, abastecimentos, manutenção, quilometragem e metas de motoboys. Arquitetura, interface, autenticação, integrações, banco de dados e evolução contínua.',
+    summary:
+      'Plataforma própria em produção para gestão de ganhos, abastecimentos, manutenção, quilometragem e metas de motoboys.',
+    problem:
+      'Organizar a rotina financeira e operacional de profissionais que trabalham na rua, com dados espalhados.',
+    steps: [
+      'Arquitetura do produto e evolução contínua desde o zero.',
+      'Interface e fluxos mobile-first, do cadastro ao acompanhamento.',
+      'Autenticação, banco de dados e integrações via Firebase e APIs REST.',
+      'Metas, manutenção, quilometragem, mapa de calor e modo compacto.',
+    ],
+    result: 'Produto web completo em produção, usado como base de evolução constante.',
     tech: ['React', 'Next.js', 'TypeScript', 'Tailwind', 'Firebase', 'APIs REST', 'PWA'],
     url: 'https://www.motodiario.app/',
-    cta: 'Ver produto',
-    image: '/port/motodiario/telas/motodiario_financeiro_completro_scrool.jpeg',
+    urlLabel: 'Ver produto',
+    gallery: [
+      { src: '/port/motodiario/telas/motodiario_financeiro_completro_scrool.jpeg', caption: 'Financeiro' },
+      { src: '/port/motodiario/telas/motodiario_combustivel.jpeg', caption: 'Abastecimentos' },
+      { src: '/port/motodiario/telas/motodiario_manutencoes.jpeg', caption: 'Manutenções' },
+      { src: '/port/motodiario/telas/motodiario_mapadecalor_gps.jpeg', caption: 'Mapa de calor' },
+      { src: '/port/motodiario/telas/motodiario_compactmode.jpeg', caption: 'Modo compacto' },
+    ],
   },
   {
+    id: 'pedalhe',
     name: 'Pedalhe',
     category: 'E-commerce / WordPress',
-    role: 'Desenvolvimento, tema e integrações',
-    description:
-      'E-commerce em WordPress/WooCommerce com tema e plugins próprios, regras personalizadas de carrinho e integração independente de pagamento via PIX.',
-    tech: ['WordPress', 'WooCommerce', 'PHP', 'JavaScript', 'API PIX'],
-    url: 'https://pedalhe.com.br/',
-    cta: 'Ver site',
-    image: '/lab/bikeshop/catalogo/Bikes-catalogo1.png',
+    role: 'Tema e plugins próprios · Integrações',
+    summary:
+      'E-commerce de roupas técnicas para ciclismo em WordPress/WooCommerce, com tema e plugins próprios, regras personalizadas de carrinho e integração independente de pagamento via PIX.',
+    problem: 'Transformar catálogo, checkout e pagamento em uma operação de venda funcional, sem depender de plugins prontos que não cobriam as regras da loja.',
+    steps: [
+      'Tema próprio: catálogo, página de produto, institucional e landing pages da marca.',
+      'Plugin de regras de carrinho: condições e personalizações além do padrão do WooCommerce.',
+      'Plugin de pagamento PIX: integração independente, com geração de cobrança e confirmação de status.',
+      'Tipos de conteúdo e campos personalizados (ACF/CPTs) para catálogo e comunicação.',
+    ],
+    result: 'Loja sob medida, com personalizações que passam do visual para a regra de negócio.',
+    tech: ['WordPress', 'WooCommerce', 'PHP', 'JavaScript', 'API PIX', 'ACF', 'CPTs'],
+    statusTag: 'site fora do ar',
+    statusNote: 'O site está fora do ar no momento — confira as telas na galeria.',
+    gallery: [
+      { src: '/portfolio/pedalhe/home-01.webp', caption: 'Home' },
+      { src: '/portfolio/pedalhe/shop-01.webp', caption: 'Catálogo' },
+      { src: '/portfolio/pedalhe/shop-02.webp', caption: 'Catálogo — rolagem' },
+      { src: '/portfolio/pedalhe/produto-01.webp', caption: 'Produto' },
+      { src: '/portfolio/pedalhe/home-02.webp', caption: 'Home — coleção' },
+      { src: '/portfolio/pedalhe/manifesto-01.webp', caption: 'Manifesto' },
+    ],
+  },
+  {
+    id: 'nachuva',
+    name: 'NaChuva',
+    category: 'Landing page / WordPress',
+    role: 'Landing page própria · Tema Pedalhe',
+    summary:
+      'Landing page da campanha NaChuva, dentro do ecossistema WordPress do Pedalhe: layout dedicado, seções de campanha e CTA, usando o tema e os plugins próprios da marca.',
+    steps: [
+      'Página de campanha criada dentro do tema próprio do Pedalhe.',
+      'Estrutura de landing: hero, seções editoriais, prova e CTA.',
+      'Conteúdo e assets da marca, com layout responsivo.',
+    ],
+    statusTag: 'prévia local',
+    statusNote: 'Prévia local — página em desenvolvimento.',
+    tech: ['WordPress', 'PHP', 'Landing page', 'UI', 'Responsivo'],
+    gallery: [
+      { src: '/portfolio/nachuva/nachuva-01.webp', caption: 'Topo' },
+      { src: '/portfolio/nachuva/nachuva-02.webp', caption: 'Seções' },
+      { src: '/portfolio/nachuva/nachuva-03.webp', caption: 'Final' },
+    ],
   },
 ];
 
@@ -98,15 +152,6 @@ const labProjects = [
     status: 'live',
     tags: ['Landing page', 'UI', 'Copy'],
     cover: '/lab/covers_lab/gabe-tour-guide.svg',
-  },
-  {
-    id: 'experience-studio',
-    title: 'Lagoa E-Bikes',
-    description:
-      'Página comercial para aluguel, oficina e venda de bicicletas elétricas na Lagoa da Conceição.',
-    status: 'wip',
-    tags: ['Landing page', 'Negócio', 'UI'],
-    cover: '/lab/bike/gallery/01.webp',
   },
   {
     id: 'animated-scene',
@@ -226,7 +271,9 @@ const SectionLabel = ({ children }: { children: string }) => (
   <p className="font-mono text-[0.68rem] uppercase tracking-[0.34em] text-[#00ffcc]/70">{children}</p>
 );
 
-export const ConversionHomePage = () => {
+export const PersonalPortfolioPage = () => {
+  const [activeProject, setActiveProject] = useState<ProjectCase | null>(null);
+
   useEffect(() => {
     document.title = 'Maruk.xyz — Full Stack Developer & Creative Technologist';
 
@@ -392,37 +439,52 @@ export const ConversionHomePage = () => {
           <div className="container">
             <div className="mb-12 max-w-3xl">
               <SectionLabel>Projetos</SectionLabel>
-              <h2 className="mt-4 text-4xl font-semibold leading-tight text-white md:text-6xl">O que já está no ar.</h2>
+              <h2 className="mt-4 text-4xl font-semibold leading-tight text-white md:text-6xl">Projetos e cases.</h2>
               <p className="mt-5 text-lg leading-8 text-white/62">
-                Produtos em produção e o laboratório de experiências interativas — os protótipos que
-                mostram o que eu consigo construir além da página tradicional.
+                Produtos em produção, e-commerce e landing pages — cada card abre o case com telas e o
+                que foi construído. Abaixo, o laboratório de experiências interativas.
               </p>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-2">
-              {featuredProjects.map((project) => (
-                <article key={project.name} className="group overflow-hidden border border-white/10 bg-white/[0.035] transition-colors hover:border-[#00ffcc]/45">
-                  <div className="aspect-[16/9] overflow-hidden bg-black">
-                    <img src={project.image} alt={project.name} loading="lazy" className="h-full w-full object-cover opacity-75 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-95" />
+            <div className="grid gap-5 md:grid-cols-3">
+              {caseStudies.map((project) => (
+                <button
+                  key={project.id}
+                  type="button"
+                  onClick={() => setActiveProject(project)}
+                  className="group flex flex-col overflow-hidden border border-white/10 bg-white/[0.035] text-left transition-colors hover:border-[#00ffcc]/45"
+                >
+                  <div className="aspect-[16/10] overflow-hidden bg-black">
+                    <img
+                      src={project.gallery[0]?.src}
+                      alt={project.name}
+                      loading="lazy"
+                      className="h-full w-full object-cover opacity-75 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-95"
+                    />
                   </div>
-                  <div className="p-6 md:p-8">
+                  <div className="flex flex-1 flex-col p-5 md:p-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="font-mono text-[0.68rem] uppercase tracking-[0.22em] text-[#00ffcc]/75">{project.category}</p>
-                      <a href={project.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm text-white/70 transition-colors hover:text-[#00ffcc]">
-                        {project.cta}
-                        <ArrowUpRight size={15} />
-                      </a>
+                      <p className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-[#00ffcc]/75">{project.category}</p>
+                      {project.statusTag ? (
+                        <span className="border border-white/12 px-2 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.14em] text-white/40">
+                          {project.statusTag}
+                        </span>
+                      ) : null}
                     </div>
-                    <h3 className="mt-4 text-3xl font-semibold text-white">{project.name}</h3>
-                    <p className="mt-1 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-white/40">{project.role}</p>
-                    <p className="mt-4 text-base leading-7 text-white/62">{project.description}</p>
-                    <div className="mt-6 flex flex-wrap gap-2">
-                      {project.tech.map((item) => (
-                        <span key={item} className="border border-white/10 px-2.5 py-1.5 text-xs text-white/55">{item}</span>
+                    <h3 className="mt-3 text-2xl font-semibold text-white">{project.name}</h3>
+                    <p className="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-white/40">{project.role}</p>
+                    <p className="mt-3 flex-1 text-sm leading-6 text-white/60">{project.summary}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {project.tech.slice(0, 4).map((item) => (
+                        <span key={item} className="border border-white/10 px-2 py-1 text-[0.65rem] text-white/50">{item}</span>
                       ))}
                     </div>
+                    <span className="mt-5 inline-flex items-center gap-2 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-[#00ffcc]/80 transition-colors group-hover:text-[#00ffcc]">
+                      Abrir case
+                      <ArrowUpRight size={13} />
+                    </span>
                   </div>
-                </article>
+                </button>
               ))}
             </div>
 
@@ -432,7 +494,7 @@ export const ConversionHomePage = () => {
                 <div className="max-w-2xl">
                   <div className="flex items-center gap-3">
                     <SectionLabel>No laboratório</SectionLabel>
-                    <span className="border border-[#00ffcc]/30 px-2 py-1 font-mono text-[0.58rem] uppercase tracking-[0.16em] text-[#00ffcc]">8 experimentos</span>
+                    <span className="border border-[#00ffcc]/30 px-2 py-1 font-mono text-[0.58rem] uppercase tracking-[0.16em] text-[#00ffcc]">7 experimentos</span>
                   </div>
                   <h3 className="mt-4 text-3xl font-semibold leading-tight text-white md:text-4xl">Experimentos interativos</h3>
                   <p className="mt-4 text-base leading-7 text-white/60">
@@ -597,6 +659,12 @@ export const ConversionHomePage = () => {
           </div>
         </footer>
       </main>
+
+      <ProjectCaseModal
+        project={activeProject}
+        contactHref={contactHref}
+        onClose={() => setActiveProject(null)}
+      />
     </div>
   );
 };

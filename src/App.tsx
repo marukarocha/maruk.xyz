@@ -18,7 +18,7 @@ import { ExperimentView } from './playground/ExperimentView';
 import { TechConsultingPage } from './pages/TechConsultingPage';
 import { RecruiterProfilePage } from './pages/RecruiterProfilePage';
 import { LoginPage } from './pages/LoginPage';
-import { ConversionHomePage } from './pages/ConversionHomePage';
+import { PersonalPortfolioPage } from './pages/PersonalPortfolioPage';
 
 // Portfolio — the main site
 const Portfolio = () => {
@@ -65,8 +65,8 @@ function App() {
   return (
     <Routes>
       {/* Portfolio */}
-      <Route path="/" element={<ConversionHomePage />} />
-      <Route path="/portfolio" element={<Portfolio />} />
+      <Route path="/" element={<Portfolio />} />
+      <Route path="/portfolio" element={<PersonalPortfolioPage />} />
       <Route path="/perfil" element={<RecruiterProfilePage />} />
       <Route path="/cv" element={<RecruiterProfilePage />} />
       <Route path="/consultoria-informatica" element={<TechConsultingPage />} />
