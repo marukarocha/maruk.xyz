@@ -12,8 +12,10 @@ import {
 } from 'lucide-react';
 import gsap from 'gsap';
 import { ImageLightbox, type LightboxImage } from '../components/ImageLightbox';
+import { VideoEmbed } from '../components/VideoEmbed';
 import { useReveal } from '../hooks/useReveal';
 import { caseStudies } from '../data/portfolioCases';
+import { experiments } from '../playground/registry';
 import type { ProjectCase } from '../types/portfolio';
 
 const contactHref = 'mailto:maruk.xyz@gmail.com?subject=Oportunidade%20profissional';
@@ -31,7 +33,7 @@ const navSections = [
 
 const marqueeItems = [
   'Full Stack Developer',
-  'Full Stack',
+  'Front-end',
   'React',
   'Next.js',
   'WordPress',
@@ -40,6 +42,16 @@ const marqueeItems = [
   'Motion',
   'Branding',
 ];
+
+const facts = [
+  { value: '20+', label: 'anos de web' },
+  { value: '4', label: 'cases em produção' },
+  { value: '7', label: 'experimentos no lab' },
+  { value: '6', label: 'frentes de atuação' },
+];
+
+// Experimentos do LAB exibidos como projetos (sem a Lagoa E-Bikes).
+const labExperiments = experiments.filter((experiment) => experiment.id !== 'experience-studio');
 
 type ThreeDImage = { kind: 'image'; src: string; title: string; ratio: string };
 type ThreeDText = { kind: 'text'; title: string; text: string };
@@ -357,6 +369,18 @@ export const PersonalPortfolioPage = () => {
           </div>
         </div>
 
+        {/* FATOS */}
+        <div className="border-b border-white/10">
+          <div className="mx-auto grid max-w-[1200px] grid-cols-2 gap-px bg-white/10 md:grid-cols-4">
+            {facts.map((fact) => (
+              <div key={fact.label} className="bg-[#0a0a0a] p-6 md:p-8">
+                <p className="text-4xl font-semibold tracking-tight text-white md:text-5xl">{fact.value}</p>
+                <p className="mt-2 font-mono text-[0.55rem] uppercase tracking-[0.16em] text-white/35">{fact.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* 01 O QUE EU FAÇO */}
         <section id="faco" className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 sm:py-20">
           <SectionHead index="01" label="O que eu faço" title="Do código à imagem.">
@@ -493,6 +517,57 @@ export const PersonalPortfolioPage = () => {
               </div>
             </div>
           </div>
+
+          {/* LABORATÓRIO */}
+          <div className="mt-20">
+            <div className="mb-8 flex flex-col justify-between gap-4 border-t border-white/10 pt-6 md:flex-row md:items-end">
+              <div>
+                <p className="font-mono text-[0.58rem] uppercase tracking-[0.24em] text-[#00ffcc]/70">Laboratório</p>
+                <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white md:text-3xl">Experimentos interativos.</h3>
+              </div>
+              <Link
+                to="/playground"
+                viewTransition
+                className="inline-flex items-center gap-2 border-b border-white/15 pb-1 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-white/50 transition-colors hover:border-[#00ffcc] hover:text-[#00ffcc]"
+              >
+                Ver playground
+                <ArrowUpRight size={12} />
+              </Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {labExperiments.map((experiment) => (
+                <Link
+                  key={experiment.id}
+                  to={`/playground/${experiment.id}`}
+                  viewTransition
+                  className="group overflow-hidden border border-white/10 bg-white/[0.02] transition-colors hover:border-[#00ffcc]/45"
+                >
+                  <div className="aspect-[4/3] overflow-hidden bg-black">
+                    <img
+                      src={experiment.thumbnail}
+                      alt={experiment.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover opacity-70 grayscale transition duration-700 group-hover:scale-[1.04] group-hover:opacity-100 group-hover:grayscale-0"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h4 className="text-base font-semibold text-white transition-colors group-hover:text-[#00ffcc]">{experiment.title}</h4>
+                      <ArrowUpRight size={14} className="shrink-0 text-white/25 transition-colors group-hover:text-[#00ffcc]" />
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-white/50">{experiment.description}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {experiment.tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="border border-white/10 px-2 py-0.5 font-mono text-[0.52rem] uppercase tracking-[0.12em] text-white/35">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* 04 3D — masonry com texto */}
@@ -551,15 +626,11 @@ export const PersonalPortfolioPage = () => {
           </SectionHead>
           <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]" data-reveal>
             <div className="border border-white/10 bg-black">
-              <div className="aspect-video">
-                <iframe
-                  src="https://player.vimeo.com/video/816333951?title=0&byline=0&portrait=0"
-                  title="Reel principal"
-                  className="h-full w-full"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
+              <VideoEmbed
+                src="https://player.vimeo.com/video/816333951?title=0&byline=0&portrait=0"
+                title="Reel principal"
+                label="Reel principal"
+              />
               <div className="flex items-center justify-between border-t border-white/10 px-4 py-3">
                 <span className="font-mono text-[0.55rem] uppercase tracking-[0.18em] text-white/35">
                   Reel principal
