@@ -11,7 +11,6 @@ export default {
         sans: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
         display: ['Inter', 'sans-serif'],
-        serif: ['"Instrument Serif"', 'Georgia', 'serif'],
       },
       colors: {
         primary: {

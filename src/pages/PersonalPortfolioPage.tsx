@@ -31,7 +31,7 @@ const navSections = [
 
 const marqueeItems = [
   'Full Stack Developer',
-  'Creative Technologist',
+  'Full Stack',
   'React',
   'Next.js',
   'WordPress',
@@ -189,7 +189,7 @@ export const PersonalPortfolioPage = () => {
   const revealRef = useReveal<HTMLElement>();
 
   useEffect(() => {
-    document.title = 'Portfólio | Maruk.xyz — Full Stack Developer & Creative Technologist';
+    document.title = 'Portfólio | Maruk.xyz — Desenvolvedor Full Stack';
 
     let metaDescription = document.querySelector('meta[name="description"]');
     if (!metaDescription) {
@@ -264,8 +264,7 @@ export const PersonalPortfolioPage = () => {
                 data-hero
                 className="mt-6 text-[2.7rem] font-semibold leading-[0.97] tracking-tight text-[#ededed] sm:text-6xl lg:text-[4.6rem]"
               >
-                Desenvolvedor Full Stack e{' '}
-                <span className="font-serif italic font-normal text-[#00ffcc]">Creative Technologist</span>.
+                Desenvolvedor <span className="text-[#00ffcc]">Full Stack</span>.
               </h1>
               <p data-hero className="mt-8 max-w-xl text-base leading-8 text-white/60 md:text-lg">
                 Mais de 20 anos construindo web, produto e imagem: front-end, WordPress/WooCommerce,
@@ -511,7 +510,7 @@ export const PersonalPortfolioPage = () => {
                   data-reveal
                   className="mb-4 break-inside-avoid border border-white/10 bg-white/[0.02] p-6"
                 >
-                  <p className="font-serif text-2xl italic leading-snug text-[#ededed]">{item.title}</p>
+                  <p className="text-xl font-semibold leading-snug tracking-tight text-white">{item.title}</p>
                   <p className="mt-3 text-xs leading-6 text-white/45">{item.text}</p>
                 </div>
               ) : (
@@ -666,7 +665,7 @@ export const PersonalPortfolioPage = () => {
         <section id="contato" className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 sm:py-24">
           <p className="font-mono text-[0.6rem] uppercase tracking-[0.28em] text-[#00ffcc]/80">08 — Contato</p>
           <h2 className="mt-4 max-w-3xl text-[2.6rem] font-semibold leading-[0.98] tracking-tight text-white sm:text-6xl">
-            Vamos <span className="font-serif italic font-normal text-[#00ffcc]">conversar</span>.
+            Vamos <span className="text-[#00ffcc]">conversar</span>.
           </h2>
           <p className="mt-6 max-w-xl text-base leading-8 text-white/55">
             Aberto a vagas e a projetos sob demanda. Me conte o contexto — time, produto ou problema —
